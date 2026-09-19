@@ -653,7 +653,34 @@ async function listAllReadings(
 /* ============================================================
    REFERENCE DATA
    ============================================================ */
+const referencePath = path.join(
+    __dirname,
+    "..",
+    "data",
+    "reference-readings.json"
+);
 
+function loadReferenceReadings() {
+    if (!fs.existsSync(referencePath)) {
+        return [];
+    }
+
+    try {
+        return JSON.parse(
+            fs.readFileSync(
+                referencePath,
+                "utf8"
+            )
+        );
+    } catch (error) {
+        console.error(
+            "Failed to load reference readings:",
+            error.message
+        );
+
+        return [];
+    }
+}
 /*
  * The current prototype uses the real UK-DALE dataset
  * as a shared reference/demo dataset.
@@ -701,67 +728,14 @@ async function getReadingCount() {
 async function listReferenceReadings(
     maxItems = 5000
 ) {
+    const readings = loadReferenceReadings();
 
-    if (MODE === "local") {
-
-        const db =
-            readLocal();
-
-        return db.readings
-
-            .filter(
-                reading =>
-                    reading.source ===
-                    "UK-DALE-real-dataset"
-            )
-
-            .sort(
-                (a, b) =>
-                    new Date(
-                        b.timestamp
-                    ) -
-                    new Date(
-                        a.timestamp
-                    )
-            )
-
-            .slice(
-                0,
-                maxItems
-            );
-    }
-
-    /*
-     * Cloud fallback:
-     * reference readings are identified
-     * by their dataset source.
-     *
-     * This is used only for the shared
-     * demonstration/reference dataset.
-     */
-
-    const result =
-        await docClient.send(
-            new ScanCommand({
-                TableName:
-                    TABLES.readings,
-
-                FilterExpression:
-                    "#source = :source",
-
-                ExpressionAttributeNames: {
-                    "#source":
-                        "source"
-                },
-
-                ExpressionAttributeValues: {
-                    ":source":
-                        "UK-DALE-real-dataset"
-                }
-            })
-        );
-
-    return (result.Items || [])
+    return readings
+        .filter(
+            reading =>
+                reading.source ===
+                "UK-DALE-real-dataset"
+        )
         .sort(
             (a, b) =>
                 new Date(b.timestamp) -
@@ -772,7 +746,6 @@ async function listReferenceReadings(
             maxItems
         );
 }
-
 module.exports = {
 
     MODE,
