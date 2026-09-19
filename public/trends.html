@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        EnergyFlow - Consumption Trends
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+    <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <span class="logo-icon">
+                ⚡
+            </span>
+
+            EnergyFlow
+
+        </div>
+
+
+        <div class="sidebar-label">
+            ENERGY MANAGEMENT
+        </div>
+
+
+        <nav class="nav">
+
+            <a href="/index.html">
+                <span>🏠</span>
+                Dashboard
+            </a>
+
+
+            <a href="/analytics.html">
+                <span>📊</span>
+                Analytics
+            </a>
+
+
+            <a
+                href="/trends.html"
+                class="active"
+            >
+                <span>📈</span>
+                Trends
+            </a>
+
+
+            <a href="/alerts.html">
+                <span>🚨</span>
+                Alerts
+            </a>
+
+
+            <a href="/energy-tips.html">
+                <span>💡</span>
+                Energy Tips
+            </a>
+
+
+            <a href="/reports.html">
+                <span>📄</span>
+                Reports
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="cloud-mini">
+
+                <span class="online-dot"></span>
+
+                EnergyFlow System
+
+                <small id="sidebarStatus">
+                    Storage: local
+                </small>
+
+            </div>
+
+
+            <button
+                id="logoutBtn"
+                class="logout"
+            >
+
+                ↪ Logout
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN
+         ===================================================== -->
+
+    <main class="main">
+
+
+        <div class="topbar">
+
+            <div>
+
+                <div class="eyebrow">
+                    ENERGY MONITORING
+                </div>
+
+
+                <h1>
+                    Consumption Trends
+                </h1>
+
+
+                <p class="page-subtitle">
+
+                    Explore how appliance power
+                    consumption changes across
+                    recorded measurements.
+
+                </p>
+
+            </div>
+
+
+            <div
+                id="cloudStatus"
+                class="status"
+            >
+
+                ● System Online
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             FILTERS
+             ================================================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Trend Filters
+                    </h2>
+
+                    <p>
+                        Choose an appliance and
+                        analysis window.
+                    </p>
+
+                </div>
+
+
+                <span class="badge">
+                    INTERACTIVE
+                </span>
+
+            </div>
+
+
+            <div
+                style="
+                    display:grid;
+                    grid-template-columns:
+                        repeat(2,minmax(0,1fr));
+                    gap:20px;
+                "
+            >
+
+                <div>
+
+                    <label
+                        for="trendAppliance"
+                        style="
+                            display:block;
+                            margin-bottom:8px;
+                            font-weight:700;
+                        "
+                    >
+                        Appliance
+                    </label>
+
+
+                    <select
+                        id="trendAppliance"
+                        style="
+                            width:100%;
+                            padding:13px;
+                            border:1px solid #d7e1e9;
+                            border-radius:10px;
+                            background:#fff;
+                        "
+                    >
+
+                        <option value="all">
+                            All Appliances
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div>
+
+                    <label
+                        for="trendLimit"
+                        style="
+                            display:block;
+                            margin-bottom:8px;
+                            font-weight:700;
+                        "
+                    >
+                        Readings
+                    </label>
+
+
+                    <select
+                        id="trendLimit"
+                        style="
+                            width:100%;
+                            padding:13px;
+                            border:1px solid #d7e1e9;
+                            border-radius:10px;
+                            background:#fff;
+                        "
+                    >
+
+                        <option value="50">
+                            Last 50
+                        </option>
+
+                        <option value="100">
+                            Last 100
+                        </option>
+
+                        <option value="250">
+                            Last 250
+                        </option>
+
+                        <option value="500">
+                            Last 500
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <button
+                id="analyzeTrendBtn"
+                class="primary-btn"
+                style="
+                    margin-top:20px;
+                "
+            >
+
+                Analyze
+
+            </button>
+
+        </section>
+
+
+
+        <!-- =================================================
+             METRICS
+             ================================================= -->
+
+        <section
+            class="dashboard-grid"
+            style="
+                margin-bottom:20px;
+            "
+        >
+
+            <div class="metric-card">
+
+                <span class="metric-label">
+                    TOTAL ENERGY
+                </span>
+
+                <strong id="trendTotalEnergy">
+                    0 kWh
+                </strong>
+
+                <small>
+                    Selected readings
+                </small>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span class="metric-label">
+                    AVERAGE POWER
+                </span>
+
+                <strong id="trendAveragePower">
+                    0 W
+                </strong>
+
+                <small>
+                    Average recorded load
+                </small>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span class="metric-label">
+                    PEAK POWER
+                </span>
+
+                <strong id="trendPeakPower">
+                    0 W
+                </strong>
+
+                <small>
+                    Highest recorded load
+                </small>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span class="metric-label">
+                    READINGS
+                </span>
+
+                <strong id="trendReadingCount">
+                    0
+                </strong>
+
+                <small>
+                    Included in analysis
+                </small>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             CHART
+             ================================================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Power Consumption Trend
+                    </h2>
+
+                    <p>
+                        Power recorded for the selected
+                        appliance and reading window.
+                    </p>
+
+                </div>
+
+
+                <span class="badge">
+                    REAL DATA
+                </span>
+
+            </div>
+
+
+            <div
+                id="trendChart"
+                class="trend-chart"
+            >
+
+                <div class="loading">
+                    Loading recorded measurements...
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             DATA TABLE
+             ================================================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Trend Data
+                    </h2>
+
+                    <p>
+                        Individual measurements included
+                        in the analysis.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="trendData">
+
+                <div class="loading">
+                    Loading...
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             INTERPRETATION
+             ================================================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Trend Interpretation
+                    </h2>
+
+                    <p>
+                        Automatic interpretation of
+                        the selected readings.
+                    </p>
+
+                </div>
+
+                <span class="badge">
+                    ANALYZED
+                </span>
+
+            </div>
+
+
+            <div
+                id="trendInterpretation"
+                class="insight-box"
+            >
+
+                Analyzing...
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script src="/script.js"></script>
+
+</body>
+
+</html>

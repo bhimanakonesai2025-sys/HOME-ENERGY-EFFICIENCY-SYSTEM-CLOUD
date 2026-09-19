@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Local database/testing data
+data/local-db.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Large dataset files
+data/ukdale/**/*.dat
+data/ukdale/**/*.csv
+
+# Temporary files
+*.tmp
+*.temp

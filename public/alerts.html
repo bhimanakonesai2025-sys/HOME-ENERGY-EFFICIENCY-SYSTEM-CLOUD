@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>EnergyFlow | Alerts</title>
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <span class="logo-icon">
+                ⚡
+            </span>
+
+            <span>
+                EnergyFlow
+            </span>
+
+        </div>
+
+
+        <div class="sidebar-label">
+            ENERGY MANAGEMENT
+        </div>
+
+
+        <nav class="nav">
+
+            <a href="/index.html">
+
+                <span>
+                    🏠
+                </span>
+
+                Dashboard
+
+            </a>
+
+
+            <a href="/analytics.html">
+
+                <span>
+                    📊
+                </span>
+
+                Analytics
+
+            </a>
+
+
+            <a href="/trends.html">
+
+                <span>
+                    📈
+                </span>
+
+                Trends
+
+            </a>
+
+
+            <a
+                href="/alerts.html"
+                class="active"
+            >
+
+                <span>
+                    🚨
+                </span>
+
+                Alerts
+
+            </a>
+
+
+            <a href="/energy-tips.html">
+
+                <span>
+                    💡
+                </span>
+
+                Energy Tips
+
+            </a>
+
+
+            <a href="/reports.html">
+
+                <span>
+                    📄
+                </span>
+
+                Reports
+
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="cloud-mini">
+
+                <span class="online-dot"></span>
+
+                EnergyFlow System
+
+                <small id="sidebarStatus">
+                    Connecting...
+                </small>
+
+            </div>
+
+
+            <button
+                id="logoutBtn"
+                class="logout"
+            >
+
+                ↪ Logout
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="main">
+
+        <!-- HEADER -->
+
+        <header class="topbar">
+
+            <div>
+
+                <div class="eyebrow">
+                    ENERGY SAFETY
+                </div>
+
+
+                <h1>
+                    Energy Alerts
+                </h1>
+
+
+                <p class="page-subtitle">
+                    Detect unusual and high-consumption appliance behaviour.
+                </p>
+
+            </div>
+
+
+            <span
+                id="cloudStatus"
+                class="status"
+            >
+                Checking system...
+            </span>
+
+        </header>
+
+
+        <!-- ================= ALERT SUMMARY ================= -->
+
+        <section class="alert-metrics-grid">
+
+    <div class="alert-metric-card">
+
+        <span class="metric-label">
+            ACTIVE ALERTS
+        </span>
+
+        <strong id="alertCount">
+            0
+        </strong>
+
+        <small>
+            Detected conditions
+        </small>
+
+    </div>
+
+
+    <div class="alert-metric-card">
+
+        <span class="metric-label">
+            ANALYZED READINGS
+        </span>
+
+        <strong id="alertReadings">
+            0
+        </strong>
+
+        <small>
+            Used for detection
+        </small>
+
+    </div>
+
+
+    <div class="alert-metric-card">
+
+        <span class="metric-label">
+            HIGH SEVERITY
+        </span>
+
+        <strong id="highAlertCount">
+            0
+        </strong>
+
+        <small>
+            Requires attention
+        </small>
+
+    </div>
+
+
+    <div class="alert-metric-card">
+
+        <span class="metric-label">
+            ENERGY ANALYZED
+        </span>
+
+        <strong id="alertEnergy">
+            0.000 kWh
+        </strong>
+
+        <small>
+            Recorded energy
+        </small>
+
+    </div>
+
+</section>
+
+        <!-- ================= ALERTS ================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Detected Conditions
+                    </h2>
+
+
+                    <p>
+                        Alerts generated from appliance-level energy analysis
+                    </p>
+
+                </div>
+
+
+                <span class="badge">
+                    AUTOMATED
+                </span>
+
+            </div>
+
+
+            <div id="alertsContainer">
+
+                <div class="loading">
+                    Analyzing energy usage...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ALERT TYPES ================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Detection Rules
+                    </h2>
+
+
+                    <p>
+                        Conditions currently monitored by EnergyFlow
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="alert-rules">
+
+                <div class="alert-rule">
+
+                    <div class="alert-rule-icon">
+                        🔴
+                    </div>
+
+
+                    <div>
+
+                        <h3>
+                            High Energy Contribution
+                        </h3>
+
+
+                        <p>
+                            Triggered when an appliance contributes
+                            at least 20% of the recorded household
+                            energy consumption.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="alert-rule">
+
+                    <div class="alert-rule-icon">
+                        🟠
+                    </div>
+
+
+                    <div>
+
+                        <h3>
+                            High Power
+                        </h3>
+
+
+                        <p>
+                            Triggered when an appliance reaches a
+                            peak power level at least 20% above
+                            its average recorded power.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="alert-rule">
+
+                    <div class="alert-rule-icon">
+                        🔵
+                    </div>
+
+
+                    <div>
+
+                        <h3>
+                            Variable Usage Pattern
+                        </h3>
+
+
+                        <p>
+                            Triggered when the difference between
+                            minimum and maximum recorded power
+                            indicates substantial variation.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= SYSTEM NOTE ================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        About Energy Alerts
+                    </h2>
+
+
+                    <p>
+                        How EnergyFlow interprets consumption data
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="insight-box"
+                id="alertInsight"
+            >
+
+                <div class="loading">
+                    Preparing alert analysis...
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script src="/script.js"></script>
+
+</body>
+
+</html>

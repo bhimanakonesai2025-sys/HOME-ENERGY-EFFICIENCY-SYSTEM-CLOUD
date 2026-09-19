@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>EnergyFlow Login</title>
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+</head>
+
+<body class="auth-page">
+
+    <div class="auth-card">
+
+        <div class="brand">
+            ⚡ EnergyFlow
+        </div>
+
+        <p class="subtitle">
+            Cloud-Based Home Energy Efficiency
+            Monitoring System
+        </p>
+
+        <form id="loginForm">
+
+            <div class="field">
+
+                <label for="email">
+                    Email
+                </label>
+
+                <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                    required
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required
+                >
+
+            </div>
+
+            <button
+                class="primary"
+                type="submit"
+            >
+                Login
+            </button>
+
+            <div
+                id="message"
+                class="message"
+                role="alert"
+            ></div>
+
+        </form>
+
+        <a
+            class="link"
+            href="/register.html"
+        >
+            Create a new account
+        </a>
+
+    </div>
+
+    <script src="/auth.js"></script>
+
+</body>
+
+</html>

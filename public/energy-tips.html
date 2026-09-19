@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        EnergyFlow | Energy Saving Tips
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <span class="logo-icon">
+                ⚡
+            </span>
+
+            EnergyFlow
+
+        </div>
+
+
+        <div class="sidebar-label">
+            ENERGY MANAGEMENT
+        </div>
+
+
+        <nav class="nav">
+
+            <a href="/index.html">
+                <span>🏠</span>
+                Dashboard
+            </a>
+
+            <a href="/analytics.html">
+                <span>📊</span>
+                Analytics
+            </a>
+
+            <a href="/trends.html">
+                <span>📈</span>
+                Trends
+            </a>
+
+            <a href="/alerts.html">
+                <span>🚨</span>
+                Alerts
+            </a>
+
+            <a
+                href="/energy-tips.html"
+                class="active"
+            >
+                <span>💡</span>
+                Energy Tips
+            </a>
+
+            <a href="/reports.html">
+                <span>📄</span>
+                Reports
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="cloud-mini">
+
+                <span class="online-dot"></span>
+
+                EnergyFlow System
+
+                <small id="sidebarStatus">
+                    Storage: local
+                </small>
+
+            </div>
+
+
+            <button
+                id="logoutBtn"
+                class="logout"
+            >
+                ↪ Logout
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+
+        <header class="topbar">
+
+            <div>
+
+                <div class="eyebrow">
+                    ENERGY EFFICIENCY
+                </div>
+
+                <h1>
+                    Energy Saving Tips
+                </h1>
+
+                <p class="page-subtitle">
+                    Appliance-specific recommendations
+                    retrieved from the EnergyFlow knowledge base.
+                </p>
+
+            </div>
+
+
+            <span class="status">
+                💡 RAG ENABLED
+            </span>
+
+        </header>
+
+
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Smart Recommendations
+                    </h2>
+
+                    <p>
+                        Recommendations are retrieved
+                        according to significant appliance
+                        consumption.
+                    </p>
+
+                </div>
+
+
+                <span class="badge">
+                    KNOWLEDGE BASE
+                </span>
+
+            </div>
+
+
+            <!-- IMPORTANT:
+                 This ID is now fixed and matches script.js.
+            -->
+
+            <div id="ragRecommendations">
+
+                <div class="loading">
+                    Loading recommendations...
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script src="/script.js"></script>
+
+</body>
+
+</html>

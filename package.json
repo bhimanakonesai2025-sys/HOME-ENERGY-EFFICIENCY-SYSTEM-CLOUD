@@ -1,0 +1,21 @@
+{
+  "name": "energyflow",
+  "version": "1.0.0",
+  "description": "Cloud-Based Home Energy Efficiency Monitoring System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "setup:cloud": "node scripts/setup-dynamodb.js",
+    "import:data": "node scripts/import-ukdale.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.900.0",
+    "@aws-sdk/lib-dynamodb": "^3.900.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

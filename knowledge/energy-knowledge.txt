@@ -1,0 +1,67 @@
+AIR CONDITIONER
+
+Air conditioners can be major household electricity consumers. Reducing unnecessary operating time can reduce electricity consumption. When comfortable, setting the thermostat slightly higher can reduce cooling energy. Keep doors and windows closed while cooling. Clean filters regularly because blocked filters can reduce airflow and efficiency. Prefer efficient cooling modes when available.
+
+
+REFRIGERATOR
+
+Refrigerators operate for long periods and therefore can contribute significantly to household electricity use. Keep the door closed as much as possible, maintain suitable temperature settings, and allow sufficient airflow around the appliance. Regular maintenance can support efficient operation.
+
+
+TELEVISION
+
+Televisions generally consume less power than major heating or cooling appliances, but long operating hours can increase their cumulative consumption. Turn the television off when it is not being used rather than leaving it running unnecessarily.
+
+
+WASHING MACHINE
+
+Washing machines can have high power demand during heating and some operating stages. Prefer full loads when appropriate, use efficient or lower-temperature cycles when suitable, and avoid unnecessary repeated cycles.
+
+
+LIGHTING
+
+LED lighting generally requires less electricity than older lighting technologies. Turn lights off when areas are unoccupied and use daylight when practical.
+
+
+KETTLE
+
+Electric kettles can consume significant power while operating because they use a high-power heating element. Boil only the amount of water needed when practical and avoid repeatedly reheating unused water.
+
+
+DISHWASHER
+
+Dishwashers can consume electricity during heating and drying stages. Running full loads when appropriate and using efficient cycles can reduce energy consumption.
+
+
+MICROWAVE
+
+Microwave ovens generally operate for short periods but can have relatively high instantaneous power. Avoid unnecessary operating time and use the appropriate power setting when practical.
+
+
+TOASTER
+
+Toasters use a heating element and can have relatively high power while operating. Avoid unnecessary repeated operation and use only the required operating time.
+
+
+ENERGY ANALYSIS
+
+Energy consumed can be calculated as:
+
+Energy (kWh) = Power (W) × Time (hours) / 1000.
+
+Historical energy readings can be analyzed to identify high-consumption devices and usage patterns. Recommendations should prioritize devices that contribute substantially to total consumption.
+
+
+HIGH CONSUMPTION
+
+A device contributing a substantial portion of total household energy consumption can be prioritized for energy-efficiency analysis. High consumption by itself does not prove that an appliance is defective.
+
+
+RAG SAFETY
+
+The system should provide evidence-based energy-saving suggestions. It should not claim that an appliance is defective unless there is sufficient evidence. High consumption alone does not prove a hardware fault.
+
+
+DATA SOURCE
+
+EnergyFlow may use published measured electricity datasets for development and demonstration when physical hardware is unavailable. Dataset-derived readings must be clearly distinguished from measurements collected by the project's own hardware.

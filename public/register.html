@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>EnergyFlow Register</title>
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+
+</head>
+
+
+<body class="auth-page">
+
+
+    <div class="auth-card">
+
+        <div class="brand">
+            ⚡ EnergyFlow
+        </div>
+
+
+        <p class="subtitle">
+            Create your cloud energy-monitoring
+            account.
+        </p>
+
+
+        <form id="registerForm">
+
+
+            <div class="field">
+
+                <label for="name">
+                    Name
+                </label>
+
+                <input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your name"
+                    required
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="email">
+                    Email
+                </label>
+
+                <input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    required
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    id="password"
+                    type="password"
+                    minlength="6"
+                    placeholder="Minimum 6 characters"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                class="primary"
+                type="submit"
+            >
+                Register
+            </button>
+
+
+            <div
+                id="message"
+                class="message"
+            ></div>
+
+
+        </form>
+
+
+        <a
+            class="link"
+            href="/login.html"
+        >
+            Already have an account? Login
+        </a>
+
+
+    </div>
+
+
+    <script src="/register.js"></script>
+
+</body>
+
+</html>

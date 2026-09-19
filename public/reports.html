@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>EnergyFlow | Reports</title>
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <span class="logo-icon">
+                ⚡
+            </span>
+
+            <span>
+                EnergyFlow
+            </span>
+
+        </div>
+
+
+        <div class="sidebar-label">
+            ENERGY MANAGEMENT
+        </div>
+
+
+        <nav class="nav">
+
+            <a href="/index.html">
+                <span>🏠</span>
+                Dashboard
+            </a>
+
+            <a href="/analytics.html">
+                <span>📊</span>
+                Analytics
+            </a>
+
+            <a href="/trends.html">
+                <span>📈</span>
+                Trends
+            </a>
+
+            <a href="/alerts.html">
+                <span>🚨</span>
+                Alerts
+            </a>
+
+            <a href="/energy-tips.html">
+                <span>💡</span>
+                Energy Tips
+            </a>
+
+            <a
+                href="/reports.html"
+                class="active"
+            >
+                <span>📄</span>
+                Reports
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="cloud-mini">
+
+                <span class="online-dot"></span>
+
+                EnergyFlow System
+
+                <small id="sidebarStatus">
+                    Connecting...
+                </small>
+
+            </div>
+
+
+            <button
+                id="logoutBtn"
+                class="logout"
+            >
+                ↪ Logout
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="main">
+
+        <!-- HEADER -->
+
+        <header class="topbar">
+
+            <div>
+
+                <div class="eyebrow">
+                    ENERGY REPORTING
+                </div>
+
+                <h1>
+                    Energy Reports
+                </h1>
+
+                <p class="page-subtitle">
+                    Analyze appliance consumption, energy cost and usage patterns.
+                </p>
+
+            </div>
+
+
+            <div class="report-actions">
+
+                <button
+                    id="exportReportBtn"
+                    class="secondary-btn"
+                >
+                    ↓ Export CSV
+                </button>
+
+
+                <button
+                    id="printReportBtn"
+                    class="primary-btn"
+                >
+                    🖨 Print Report
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- ================= REPORT SUMMARY ================= -->
+
+        <section class="report-metrics-grid">
+
+            <div class="report-metric-card">
+
+                <span class="metric-label">
+                    TOTAL ENERGY
+                </span>
+
+                <strong id="reportEnergy">
+                    0.000 kWh
+                </strong>
+
+                <small>
+                    Recorded consumption
+                </small>
+
+            </div>
+
+
+            <div class="report-metric-card">
+
+                <span class="metric-label">
+                    ESTIMATED COST
+                </span>
+
+                <strong id="reportCost">
+                    ₹0.00
+                </strong>
+
+                <small>
+                    Based on configured tariff
+                </small>
+
+            </div>
+
+
+            <div class="report-metric-card">
+
+                <span class="metric-label">
+                    HIGHEST CONSUMER
+                </span>
+
+                <strong id="reportHighest">
+                    —
+                </strong>
+
+                <small id="reportHighestContribution">
+                    No contribution data
+                </small>
+
+            </div>
+
+
+            <div class="report-metric-card">
+
+                <span class="metric-label">
+                    READINGS ANALYZED
+                </span>
+
+                <strong id="reportReadings">
+                    0
+                </strong>
+
+                <small>
+                    Energy measurements
+                </small>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= APPLIANCE REPORT ================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Appliance Consumption Report
+                    </h2>
+
+                    <p>
+                        Energy usage and estimated cost by appliance
+                    </p>
+
+                </div>
+
+
+                <span class="badge">
+                    REAL DATA
+                </span>
+
+            </div>
+
+
+            <div
+                id="reportTable"
+                class="report-table-wrapper"
+            >
+
+                <div class="loading">
+                    Loading report...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= REPORT INSIGHTS ================= -->
+
+        <section class="report-two-column">
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Report Interpretation
+                        </h2>
+
+                        <p>
+                            Automated summary of analyzed data
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="reportInsight"
+                    class="insight-box"
+                >
+
+                    <div class="loading">
+                        Preparing interpretation...
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Usage Overview
+                        </h2>
+
+                        <p>
+                            Distribution of recorded energy
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="reportDistribution"
+                    class="report-distribution"
+                >
+
+                    <div class="loading">
+                        Loading distribution...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= REPORT FOOTER ================= -->
+
+        <section class="report-footer">
+
+            <div>
+
+                <strong>
+                    EnergyFlow Report
+                </strong>
+
+                <span id="reportGenerated">
+                    Generated from current EnergyFlow data
+                </span>
+
+            </div>
+
+
+            <span class="report-source">
+                Source: recorded appliance-level measurements
+            </span>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script src="/script.js"></script>
+
+</body>
+
+</html>

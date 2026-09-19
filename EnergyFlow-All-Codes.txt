@@ -1,0 +1,1996 @@
+===== ./.env.example =====
+# =========================
+# EnergyFlow configuration
+# =========================
+
+PORT=5000
+JWT_SECRET=CHANGE_THIS_TO_A_LONG_RANDOM_SECRET
+COST_PER_KWH=8
+
+# local = JSON file for development
+# dynamodb = AWS DynamoDB for cloud deployment
+STORAGE_MODE=local
+
+AWS_REGION=ap-south-1
+
+# Do NOT put AWS access keys in this file when running on EC2.
+# Attach an IAM role to the EC2 instance instead.
+# For local DynamoDB access, use: aws configure
+
+# VM/dataset ingestion key
+INGEST_API_KEY=CHANGE_THIS_TO_ANOTHER_LONG_RANDOM_SECRET
+
+# Optional: set this when your public VM has a known URL.
+PUBLIC_BASE_URL=http://localhost:5000
+
+===== ./.gitignore =====
+node_modules/
+.env
+data/local-db.json
+data/ukdale/*
+!data/ukdale/house_1/
+!data/ukdale/house_1/README.txt
+*.log
+
+===== ./README.md =====
+# EnergyFlow – Cloud-Based Home Energy Efficiency Monitoring System
+
+## Problem statement
+
+Households usually receive electricity bills showing overall consumption, but this does not provide clear appliance-wise visibility. EnergyFlow is designed to collect appliance-level energy readings, store them in cloud services, analyze consumption, and present understandable energy-efficiency insights.
+
+## Final architecture
+
+Real measured public energy dataset
+        ↓
+VM / cloud ingestion process
+        ↓
+EC2 VM running Node.js + Express
+        ↓
+Amazon DynamoDB
+        ↓
+Analytics + RAG
+        ↓
+Web dashboard
+
+The same ingestion API is hardware-ready for a future ESP32/sensor source. Physical hardware is not required for this version.
+
+## Why this is a cloud project
+
+- Amazon EC2 provides the virtual machine/application compute layer.
+- Amazon DynamoDB provides managed cloud storage with scalable throughput.
+- The API is stateless and can run in multiple Node.js worker processes.
+- Readings are partitioned by homeId and indexed by deviceId/timestamp.
+- Authentication protects dashboard APIs.
+- A dedicated ingestion key protects automated data ingestion.
+- The dashboard can be accessed remotely after EC2 deployment.
+
+## Data source
+
+The final data source should be a real measured dataset, not Math.random().
+
+This project is prepared for the UK-DALE dataset, which contains appliance-by-appliance and whole-home electricity demand from five UK homes at approximately six-second resolution.
+
+The project does not claim that the measurements were collected by your own hardware. They are published dataset measurements used as the input stream.
+
+## Local development
+
+1. Copy `.env.example` to `.env`.
+2. Keep:
+   STORAGE_MODE=local
+3. Install packages:
+   npm install
+4. Start:
+   npm start
+5. Open:
+   http://localhost:5000/register.html
+6. Register an account.
+
+Local mode stores development data in data/local-db.json.
+
+## AWS setup
+
+Create DynamoDB tables:
+
+npm run setup:aws
+
+For local AWS CLI configuration, configure credentials with the AWS CLI.
+
+For EC2, prefer attaching an IAM role to the EC2 instance rather than storing long-lived access keys on the server.
+
+Then set:
+
+STORAGE_MODE=dynamodb
+AWS_REGION=your-region
+JWT_SECRET=your-long-secret
+INGEST_API_KEY=your-long-ingestion-secret
+
+## UK-DALE import
+
+Place House 1 labels.dat and the appliance channel files under:
+
+data/ukdale/house_1/
+
+Get your registered homeId from the browser developer console or from the JWT user object.
+
+Then:
+
+node scripts/import-ukdale.js --home YOUR_HOME_ID --limit 500
+
+The importer converts measured appliance power in watts into interval energy in kWh.
+
+## EC2 deployment outline
+
+On an Ubuntu EC2 instance:
+
+sudo apt update
+sudo apt install -y git nodejs npm
+
+Clone/copy the project, then:
+
+npm install
+cp .env.example .env
+nano .env
+
+Set STORAGE_MODE=dynamodb and the AWS region.
+
+Create tables:
+
+npm run setup:aws
+
+Start the server:
+
+npm start
+
+For a persistent production process, install PM2:
+
+sudo npm install -g pm2
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+
+Open TCP port 5000 in the EC2 security group if you are directly demonstrating the application on port 5000.
+
+For a production-style deployment, put Nginx in front of Node.js and expose HTTPS on port 443.
+
+## Important presentation wording
+
+Say:
+
+"Because physical sensing hardware was not available, we used a real measured appliance-level energy dataset as the input source. The data ingestion layer is deployed on a cloud VM and uses the same API contract that future hardware can use. The application stores and analyzes the readings in a scalable cloud database and presents appliance-wise energy insights through the dashboard."
+
+Do not say the dataset values were measured by your own hardware.
+Do not use Math.random() in the final demonstration.
+
+===== ./config/aws.js =====
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient } = require("@aws-sdk/lib-dynamodb");
+
+const region = process.env.AWS_REGION || "ap-south-1";
+
+const client = new DynamoDBClient({ region });
+
+const docClient = DynamoDBDocumentClient.from(client, {
+  marshallOptions: {
+    removeUndefinedValues: true
+  }
+});
+
+module.exports = { client, docClient, region };
+
+===== ./data/README.md =====
+# Real energy data
+
+The final project does NOT use Math.random() to create energy readings.
+
+For the demonstration data source, use the UK-DALE real-world appliance-level electricity dataset.
+
+Source:
+UK Energy Research Centre Energy Data Centre / Jack Kelly, UK-DALE.
+
+The dataset contains appliance-by-appliance and whole-home power demand from five UK homes, recorded approximately every 6 seconds.
+
+For the project you do NOT need the entire multi-gigabyte archive.
+
+Place the required House 1 files here:
+
+data/
+  ukdale/
+    house_1/
+      labels.dat
+      channel_5.dat
+      channel_7.dat
+      channel_12.dat
+      ...
+
+The exact channel numbers are listed in labels.dat.
+
+Then run:
+
+node scripts/import-ukdale.js --home YOUR_HOME_ID --limit 500
+
+The importer converts the measured appliance power (watts) and sampling interval into energy consumed (kWh).
+
+Important:
+These are real measurements from the published dataset. The application must describe them as dataset-based measurements, not as measurements collected by your own hardware.
+
+Source page:
+https://data.ukedc.rl.ac.uk/cgi-bin/data_browser/browse/edc/efficiency/residential/EnergyConsumption/Domestic/UK-DALE-2017/ReadMe_DALE-2017.html
+
+===== ./data/ukdale/house_1/README.txt =====
+Put the UK-DALE House 1 labels.dat and appliance channel_*.dat files in this folder.
+
+Do not commit the large dataset to GitHub.
+
+===== ./ecosystem.config.js =====
+module.exports = {
+  apps: [
+    {
+      name: "energyflow",
+      script: "server.js",
+      instances: "max",
+      exec_mode: "cluster",
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "300M",
+      env: {
+        NODE_ENV: "production"
+      }
+    }
+  ]
+};
+
+===== ./knowledge/energy-knowledge.txt =====
+AIR CONDITIONER
+Air conditioners can be major household electricity consumers. Reducing unnecessary operating time can reduce electricity consumption. When comfortable, setting the thermostat slightly higher can reduce cooling energy. Keep doors and windows closed while cooling. Clean filters regularly because blocked filters can reduce airflow and efficiency. Prefer efficient cooling modes when available.
+
+REFRIGERATOR
+Refrigerators operate for long periods and therefore can contribute significantly to household electricity use. Keep the door closed as much as possible, maintain suitable temperature settings, and allow sufficient airflow around the appliance. Regular maintenance can support efficient operation.
+
+TELEVISION
+Televisions generally consume less power than major heating or cooling appliances, but long operating hours can increase their cumulative consumption. Turn the television off when it is not being used rather than leaving it running unnecessarily.
+
+WASHING MACHINE
+Washing machines can have high power demand during heating and some operating stages. Prefer full loads when appropriate, use efficient or lower-temperature cycles when suitable, and avoid unnecessary repeated cycles.
+
+LIGHTING
+LED lighting generally requires less electricity than older lighting technologies. Turn lights off when areas are unoccupied and use daylight when practical.
+
+ENERGY ANALYSIS
+Energy consumed can be calculated as:
+Energy (kWh) = Power (W) × Time (hours) / 1000.
+
+Historical energy readings can be analyzed to identify high-consumption devices and usage patterns. Recommendations should prioritize devices that contribute substantially to total consumption.
+
+RAG SAFETY
+The system should provide evidence-based energy-saving suggestions. It should not claim that an appliance is defective unless there is sufficient evidence. High consumption alone does not prove a hardware fault.
+
+===== ./middleware/auth.js =====
+const jwt = require("jsonwebtoken");
+
+function getToken(req) {
+  const header = req.headers.authorization || "";
+
+  if (header.startsWith("Bearer ")) {
+    return header.substring(7);
+  }
+
+  return null;
+}
+
+function requireAuth(req, res, next) {
+  const token = getToken(req);
+
+  if (!token) {
+    return res.status(401).json({ message: "Authentication token required." });
+  }
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = payload;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid or expired token." });
+  }
+}
+
+function requireIngestionKey(req, res, next) {
+  const key = req.headers["x-ingest-key"];
+
+  if (!process.env.INGEST_API_KEY) {
+    return res.status(500).json({ message: "INGEST_API_KEY is not configured." });
+  }
+
+  if (!key || key !== process.env.INGEST_API_KEY) {
+    return res.status(401).json({ message: "Invalid ingestion key." });
+  }
+
+  next();
+}
+
+module.exports = { requireAuth, requireIngestionKey };
+
+===== ./package.json =====
+{
+  "name": "energyflow-cloud",
+  "version": "2.0.0",
+  "description": "Cloud-Based Home Energy Efficiency Monitoring System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "setup:aws": "node scripts/setup-dynamodb.js",
+    "import:ukdale": "node scripts/import-ukdale.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.900.0",
+    "@aws-sdk/lib-dynamodb": "^3.900.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
+===== ./public/analytics.html =====
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EnergyFlow Analytics</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<div class="app"><aside class="sidebar">
+  <div class="logo">⚡ EnergyFlow</div>
+  <nav class="nav">
+    <a href="/index.html">Dashboard</a>
+    <a href="/analytics.html">Analytics</a>
+    <a href="/reports.html">Reports</a>
+    <a href="/energy-tips.html">Energy Tips</a>
+  </nav>
+  <button id="logoutBtn" class="logout">Logout</button>
+</aside>
+<main class="main">
+<div class="topbar"><div><h1>Analytics</h1><div class="muted">Consumption patterns and appliance contribution</div></div><span class="status">Cloud analytics</span></div>
+<section class="panel"><h2>Appliance Contribution</h2><div id="analyticsBars">Loading...</div></section>
+<section class="grid">
+<div class="panel"><h2>Analysis</h2><div id="analysisText">Loading...</div></div>
+<div class="panel"><h2>RAG Knowledge Retrieval</h2><div id="ragText">Loading...</div></div>
+</section>
+</main></div>
+<script src="/script.js"></script>
+</body></html>
+===== ./public/auth.js =====
+const form = document.getElementById("loginForm");
+
+if (localStorage.getItem("energyflow_token")) {
+  window.location.href = "/index.html";
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const message = document.getElementById("message");
+  message.textContent = "Signing in...";
+
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Login failed.");
+    }
+
+    localStorage.setItem("energyflow_token", data.token);
+    localStorage.setItem("energyflow_user", JSON.stringify(data.user));
+
+    window.location.href = "/index.html";
+  } catch (error) {
+    message.textContent = error.message;
+  }
+});
+
+===== ./public/energy-tips.html =====
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EnergyFlow Tips</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<div class="app"><aside class="sidebar">
+  <div class="logo">⚡ EnergyFlow</div>
+  <nav class="nav">
+    <a href="/index.html">Dashboard</a>
+    <a href="/analytics.html">Analytics</a>
+    <a href="/reports.html">Reports</a>
+    <a href="/energy-tips.html">Energy Tips</a>
+  </nav>
+  <button id="logoutBtn" class="logout">Logout</button>
+</aside>
+<main class="main">
+<div class="topbar"><div><h1>Energy Saving Tips</h1><div class="muted">Knowledge retrieved from the EnergyFlow RAG knowledge base</div></div><span class="status">RAG enabled</span></div>
+<section class="panel"><div id="tipsList">Loading...</div></section>
+</main></div>
+<script src="/script.js"></script>
+</body></html>
+===== ./public/index.html =====
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EnergyFlow Dashboard</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="logo">⚡ EnergyFlow</div>
+  <nav class="nav">
+    <a href="/index.html">Dashboard</a>
+    <a href="/analytics.html">Analytics</a>
+    <a href="/reports.html">Reports</a>
+    <a href="/energy-tips.html">Energy Tips</a>
+  </nav>
+  <button id="logoutBtn" class="logout">Logout</button>
+</aside>
+<main class="main">
+  <div class="topbar"><div><h1>Energy Dashboard</h1><div class="muted">Appliance-wise cloud energy monitoring</div></div><span id="cloudStatus" class="status">Checking cloud...</span></div>
+  <section class="cards">
+    <div class="card"><div class="label">Total Energy</div><div id="totalEnergy" class="value">0 kWh</div></div>
+    <div class="card"><div class="label">Estimated Cost</div><div id="estimatedCost" class="value">₹0</div></div>
+    <div class="card"><div class="label">Appliances</div><div id="applianceCount" class="value">0</div></div>
+    <div class="card"><div class="label">High Usage</div><div id="highUsageCount" class="value">0</div></div>
+  </section>
+  <section class="grid">
+    <div class="panel"><h2>Energy by Appliance</h2><div id="energyBars"><p class="muted">Loading...</p></div></div>
+    <div class="panel"><h2>Smart Insight</h2><div id="smartInsight"><p class="muted">Loading...</p></div></div>
+  </section>
+  <section class="panel" style="margin-top:18px">
+    <h2>Recent Energy Readings</h2>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Device</th><th>Power</th><th>Energy</th><th>Timestamp</th><th>Source</th></tr></thead><tbody id="readingsBody"><tr><td colspan="5">Loading...</td></tr></tbody></table></div>
+  </section>
+</main>
+</div>
+<script src="/script.js"></script>
+</body>
+</html>
+===== ./public/login.html =====
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EnergyFlow Login</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="auth-page">
+<div class="auth-card">
+  <div class="brand">⚡ EnergyFlow</div>
+  <p class="subtitle">Cloud-Based Home Energy Efficiency Monitoring System</p>
+  <form id="loginForm">
+    <div class="field"><label>Email</label><input id="email" type="email" required></div>
+    <div class="field"><label>Password</label><input id="password" type="password" required></div>
+    <button class="primary" type="submit">Login</button>
+    <div id="message" class="message"></div>
+  </form>
+  <a class="link" href="/register.html">Create a new account</a>
+</div>
+<script src="/auth.js"></script>
+</body>
+</html>
+
+===== ./public/register.html =====
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EnergyFlow Register</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="auth-page">
+<div class="auth-card">
+  <div class="brand">⚡ EnergyFlow</div>
+  <p class="subtitle">Create your cloud energy-monitoring account.</p>
+  <form id="registerForm">
+    <div class="field"><label>Name</label><input id="name" required></div>
+    <div class="field"><label>Email</label><input id="email" type="email" required></div>
+    <div class="field"><label>Password</label><input id="password" type="password" minlength="6" required></div>
+    <button class="primary" type="submit">Register</button>
+    <div id="message" class="message"></div>
+  </form>
+  <a class="link" href="/login.html">Already have an account? Login</a>
+</div>
+<script src="/register.js"></script>
+</body>
+</html>
+
+===== ./public/register.js =====
+const form = document.getElementById("registerForm");
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const message = document.getElementById("message");
+  message.textContent = "Creating account...";
+
+  try {
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Registration failed.");
+    }
+
+    localStorage.setItem("energyflow_token", data.token);
+    localStorage.setItem("energyflow_user", JSON.stringify(data.user));
+
+    window.location.href = "/index.html";
+  } catch (error) {
+    message.textContent = error.message;
+  }
+});
+
+===== ./public/reports.html =====
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EnergyFlow Reports</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<div class="app"><aside class="sidebar">
+  <div class="logo">⚡ EnergyFlow</div>
+  <nav class="nav">
+    <a href="/index.html">Dashboard</a>
+    <a href="/analytics.html">Analytics</a>
+    <a href="/reports.html">Reports</a>
+    <a href="/energy-tips.html">Energy Tips</a>
+  </nav>
+  <button id="logoutBtn" class="logout">Logout</button>
+</aside>
+<main class="main">
+<div class="topbar"><div><h1>Reports</h1><div class="muted">Current cloud data summary</div></div><button id="refreshBtn" class="primary" style="width:auto;padding:9px 16px">Refresh</button></div>
+<section class="cards">
+<div class="card"><div class="label">Readings analyzed</div><div id="reportReadings" class="value">0</div></div>
+<div class="card"><div class="label">Total energy</div><div id="reportEnergy" class="value">0</div></div>
+<div class="card"><div class="label">Highest consumer</div><div id="reportHighest" class="value" style="font-size:20px">—</div></div>
+<div class="card"><div class="label">Contribution</div><div id="reportContribution" class="value" style="font-size:20px">—</div></div>
+</section>
+<section class="panel" style="margin-top:18px"><h2>Device Summary</h2><div class="table-wrap"><table class="table"><thead><tr><th>Device</th><th>Energy (kWh)</th><th>Readings</th><th>Share</th></tr></thead><tbody id="reportBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div></section>
+</main></div>
+<script src="/script.js"></script>
+</body></html>
+===== ./public/script.js =====
+const token = localStorage.getItem("energyflow_token");
+
+if (!token) {
+  window.location.href = "/login.html";
+}
+
+function headers() {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  };
+}
+
+async function api(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...headers(),
+      ...(options.headers || {})
+    }
+  });
+
+  if (response.status === 401) {
+    localStorage.removeItem("energyflow_token");
+    localStorage.removeItem("energyflow_user");
+    window.location.href = "/login.html";
+    throw new Error("Session expired.");
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Request failed.");
+  }
+
+  return data;
+}
+
+function money(value) {
+  return `₹${Number(value || 0).toFixed(2)}`;
+}
+
+function energy(value) {
+  return `${Number(value || 0).toFixed(3)} kWh`;
+}
+
+function formatTime(value) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString();
+}
+
+function set(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+async function checkCloud() {
+  const el = document.getElementById("cloudStatus");
+  if (!el) return;
+
+  try {
+    const r = await fetch("/api/health");
+    const data = await r.json();
+    el.textContent = `Cloud API • ${data.storageMode}`;
+  } catch {
+    el.textContent = "Cloud API unavailable";
+  }
+}
+
+function renderBars(containerId, devices, total) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (!devices.length) {
+    container.innerHTML = `<p class="muted">No energy readings have been imported yet.</p>`;
+    return;
+  }
+
+  const max = Math.max(...devices.map(d => Number(d.energyConsumed || 0)), 0.000001);
+
+  container.innerHTML = devices.map(d => {
+    const share = total ? (Number(d.energyConsumed) / total) * 100 : 0;
+    const width = (Number(d.energyConsumed) / max) * 100;
+
+    return `<div class="bar-row">
+      <div>${escapeHtml(d.deviceName)}</div>
+      <div class="bar"><span style="width:${Math.max(2, width)}%"></span></div>
+      <div>${share.toFixed(1)}%</div>
+    </div>`;
+  }).join("");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function loadDashboard() {
+  const totalEnergyEl = document.getElementById("totalEnergy");
+  if (!totalEnergyEl) return;
+
+  const [summary, readings] = await Promise.all([
+    api("/api/energy/summary"),
+    api("/api/energy/readings?limit=20")
+  ]);
+
+  set("totalEnergy", energy(summary.totalEnergy));
+  set("estimatedCost", money(summary.estimatedCost));
+  set("applianceCount", summary.applianceCount);
+  set("highUsageCount", summary.highUsageCount);
+
+  renderBars("energyBars", summary.devices, Number(summary.totalEnergy));
+
+  const insight = document.getElementById("smartInsight");
+
+  if (insight) {
+    if (summary.highestConsumer) {
+      insight.innerHTML = `
+        <p><strong>${escapeHtml(summary.highestConsumer.deviceName)}</strong>
+        is currently the largest energy contributor.</p>
+        <p>Consumption: <strong>${energy(summary.highestConsumer.energyConsumed)}</strong></p>
+        <p>Contribution: <strong>${summary.highestConsumer.contribution}%</strong></p>
+        <p class="muted">The system prioritizes this device for energy-efficiency analysis.</p>`;
+    } else {
+      insight.innerHTML = `<p class="muted">Import real energy readings to generate insights.</p>`;
+    }
+  }
+
+  const body = document.getElementById("readingsBody");
+
+  if (body) {
+    body.innerHTML = readings.readings.length
+      ? readings.readings.map(r => `
+        <tr>
+          <td>${escapeHtml(r.deviceName)}</td>
+          <td>${Number(r.power).toFixed(2)} W</td>
+          <td>${Number(r.energyConsumed).toFixed(6)} kWh</td>
+          <td>${formatTime(r.timestamp)}</td>
+          <td>${escapeHtml(r.source || "—")}</td>
+        </tr>`).join("")
+      : `<tr><td colspan="5" class="muted">No readings yet.</td></tr>`;
+  }
+}
+
+async function loadAnalytics() {
+  const target = document.getElementById("analyticsBars");
+  if (!target) return;
+
+  const summary = await api("/api/energy/summary");
+  const rag = await api("/api/energy/rag-analysis");
+
+  renderBars("analyticsBars", summary.devices, Number(summary.totalEnergy));
+
+  const analysis = document.getElementById("analysisText");
+
+  if (analysis) {
+    analysis.innerHTML = summary.highestConsumer
+      ? `<p>Total analyzed energy: <strong>${energy(summary.totalEnergy)}</strong></p>
+         <p>Highest consumer: <strong>${escapeHtml(summary.highestConsumer.deviceName)}</strong></p>
+         <p>Share: <strong>${summary.highestConsumer.contribution}%</strong></p>
+         <p class="muted">High usage is flagged when a device contributes at least 20% of the analyzed energy.</p>`
+      : `<p class="muted">No readings available.</p>`;
+  }
+
+  const ragText = document.getElementById("ragText");
+
+  if (ragText) {
+    if (!rag.ragContext.length) {
+      ragText.innerHTML = `<p class="muted">No RAG results yet.</p>`;
+    } else {
+      ragText.innerHTML = rag.ragContext.map(item => `
+        <div class="tip">
+          <strong>${escapeHtml(item.deviceName)}</strong>
+          ${item.recommendations.map(x => `<p>${escapeHtml(x)}</p>`).join("")}
+        </div>
+      `).join("");
+    }
+  }
+}
+
+async function loadReports() {
+  const body = document.getElementById("reportBody");
+  if (!body) return;
+
+  const summary = await api("/api/energy/summary");
+
+  set("reportReadings", summary.totalReadings);
+  set("reportEnergy", energy(summary.totalEnergy));
+  set("reportHighest", summary.highestConsumer?.deviceName || "—");
+  set(
+    "reportContribution",
+    summary.highestConsumer ? `${summary.highestConsumer.contribution}%` : "—"
+  );
+
+  body.innerHTML = summary.devices.length
+    ? summary.devices.map(d => {
+        const share = summary.totalEnergy
+          ? (d.energyConsumed / summary.totalEnergy) * 100
+          : 0;
+
+        return `<tr>
+          <td>${escapeHtml(d.deviceName)}</td>
+          <td>${Number(d.energyConsumed).toFixed(6)}</td>
+          <td>${d.readings}</td>
+          <td>${share.toFixed(2)}%</td>
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="4" class="muted">No data available.</td></tr>`;
+}
+
+async function loadTips() {
+  const target = document.getElementById("tipsList");
+  if (!target) return;
+
+  const rag = await api("/api/energy/rag-analysis");
+
+  if (!rag.ragContext.length) {
+    target.innerHTML = `<p class="muted">Import real energy data to generate appliance-specific tips.</p>`;
+    return;
+  }
+
+  target.innerHTML = rag.ragContext.map(item => `
+    <div class="tip">
+      <h3>${escapeHtml(item.deviceName)}</h3>
+      ${item.recommendations.map(x => `<p>${escapeHtml(x)}</p>`).join("")}
+    </div>
+  `).join("");
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("energyflow_token");
+      localStorage.removeItem("energyflow_user");
+      window.location.href = "/login.html";
+    });
+  }
+
+  const refreshBtn = document.getElementById("refreshBtn");
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", async () => {
+      await loadReports();
+    });
+  }
+
+  try {
+    await checkCloud();
+    await loadDashboard();
+    await loadAnalytics();
+    await loadReports();
+    await loadTips();
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+===== ./public/style.css =====
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f4f7fb;color:#172033}button,input{font:inherit}button{cursor:pointer}.auth-page{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#10233f,#1e6f8c)}.auth-card{width:min(430px,92%);background:#fff;border-radius:18px;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.18)}.brand{font-size:28px;font-weight:800;color:#16738c}.subtitle{color:#687386}.field{margin:16px 0}.field label{display:block;font-weight:600;margin-bottom:7px}.field input{width:100%;padding:12px;border:1px solid #d6dce5;border-radius:10px;outline:none}.field input:focus{border-color:#1d829d}.primary{width:100%;padding:12px;border:0;border-radius:10px;background:#176f8b;color:#fff;font-weight:700}.link{display:block;text-align:center;margin-top:15px;color:#176f8b;text-decoration:none}.message{margin-top:12px;min-height:20px;color:#b42318}.app{display:flex;min-height:100vh}.sidebar{width:245px;background:#10233f;color:#fff;padding:24px 16px;position:fixed;inset:0 auto 0 0}.logo{font-size:24px;font-weight:800;padding:0 12px 26px}.nav a{display:block;padding:12px 14px;color:#d9e5ef;text-decoration:none;border-radius:10px;margin:5px 0}.nav a.active,.nav a:hover{background:#1a6d86;color:#fff}.logout{position:absolute;left:16px;right:16px;bottom:24px;padding:11px;border:1px solid #557086;background:transparent;color:#fff;border-radius:10px}.main{margin-left:245px;width:calc(100% - 245px);padding:28px}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.topbar h1{margin:0}.status{font-size:13px;padding:8px 12px;border-radius:999px;background:#e6f6ed;color:#157347}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card,.panel{background:#fff;border-radius:16px;padding:20px;box-shadow:0 5px 22px rgba(30,50,80,.06)}.card .label{color:#687386;font-size:13px}.card .value{font-size:28px;font-weight:800;margin-top:7px}.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-top:18px}.panel h2{margin-top:0;font-size:18px}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:11px;border-bottom:1px solid #edf0f4;font-size:14px}.bar-row{display:grid;grid-template-columns:150px 1fr 80px;gap:10px;align-items:center;margin:13px 0}.bar{height:12px;background:#dfe8ee;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;background:#2a8ba4;border-radius:99px}.tip{padding:14px;background:#f3f8fa;border-left:4px solid #2a8ba4;border-radius:8px;margin:10px 0}.muted{color:#687386}.danger{color:#b42318}.small{font-size:12px}.hidden{display:none}@media(max-width:900px){.sidebar{position:static;width:100%;height:auto}.app{display:block}.main{margin-left:0;width:100%}.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}@media(max-width:560px){.cards{grid-template-columns:1fr}.main{padding:16px}}
+
+===== ./public/welcome.html =====
+<!doctype html>
+<html><head><meta http-equiv="refresh" content="0;url=/login.html"></head><body>Opening EnergyFlow...</body></html>
+===== ./rag.js =====
+const fs = require("fs");
+const path = require("path");
+
+const knowledgePath = path.join(
+  __dirname,
+  "knowledge",
+  "energy-knowledge.txt"
+);
+
+function loadKnowledge() {
+  if (!fs.existsSync(knowledgePath)) {
+    return "";
+  }
+
+  return fs.readFileSync(knowledgePath, "utf8");
+}
+
+function splitSections(text) {
+  return text
+    .split(/\n\s*\n/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function normalize(text) {
+  return String(text || "").toLowerCase();
+}
+
+function getRagRecommendations(deviceName) {
+  const sections = splitSections(loadKnowledge());
+  const query = normalize(deviceName);
+
+  const direct = sections.filter(section =>
+    normalize(section).includes(query)
+  );
+
+  const general = sections.filter(section =>
+    /energy|efficien|consumption|historical|recommend/i.test(section)
+  );
+
+  const unique = [];
+  const seen = new Set();
+
+  for (const section of [...direct, ...general]) {
+    const key = section.toLowerCase();
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(section);
+    }
+
+    if (unique.length >= 5) break;
+  }
+
+  return unique;
+}
+
+module.exports = {
+  getRagRecommendations,
+  loadKnowledge
+};
+
+===== ./routes/appliances.js =====
+const express = require("express");
+const crypto = require("crypto");
+
+const { requireAuth } = require("../middleware/auth");
+const {
+  createAppliance,
+  listAppliances
+} = require("../services/db");
+
+const router = express.Router();
+
+router.get("/", requireAuth, async (req, res) => {
+  try {
+    const appliances = await listAppliances(req.user.homeId);
+    res.json({ appliances });
+  } catch (error) {
+    console.error("Appliance list error:", error);
+    res.status(500).json({ message: "Could not load appliances." });
+  }
+});
+
+router.post("/", requireAuth, async (req, res) => {
+  try {
+    const deviceId = String(req.body.deviceId || "").trim();
+    const name = String(req.body.name || "").trim();
+
+    if (!deviceId || !name) {
+      return res.status(400).json({
+        message: "deviceId and name are required."
+      });
+    }
+
+    const appliance = {
+      homeId: req.user.homeId,
+      deviceId,
+      name,
+      applianceId: crypto.randomUUID(),
+      createdAt: new Date().toISOString()
+    };
+
+    await createAppliance(appliance);
+
+    res.status(201).json({
+      message: "Appliance saved.",
+      appliance
+    });
+  } catch (error) {
+    console.error("Appliance create error:", error);
+    res.status(500).json({ message: "Could not save appliance." });
+  }
+});
+
+module.exports = router;
+
+===== ./routes/auth.js =====
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+
+const {
+  createUser,
+  getUserByEmail,
+  createHome
+} = require("../services/db");
+
+const router = express.Router();
+
+function makeToken(user) {
+  return jwt.sign(
+    {
+      userId: user.userId,
+      email: user.email,
+      homeId: user.homeId,
+      name: user.name
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "8h" }
+  );
+}
+
+router.post("/register", async (req, res) => {
+  try {
+    const name = String(req.body.name || "").trim();
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const password = String(req.body.password || "");
+
+    if (!name || !email || password.length < 6) {
+      return res.status(400).json({
+        message: "Name, email and a password of at least 6 characters are required."
+      });
+    }
+
+    const existing = await getUserByEmail(email);
+
+    if (existing) {
+      return res.status(409).json({
+        message: "An account with this email already exists."
+      });
+    }
+
+    const userId = crypto.randomUUID();
+    const homeId = crypto.randomUUID();
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const user = {
+      userId,
+      name,
+      email,
+      passwordHash,
+      homeId,
+      createdAt: new Date().toISOString()
+    };
+
+    const home = {
+      homeId,
+      ownerId: userId,
+      name: `${name}'s Home`,
+      createdAt: new Date().toISOString()
+    };
+
+    await createUser(user);
+    await createHome(home);
+
+    const token = makeToken(user);
+
+    res.status(201).json({
+      message: "Registration successful.",
+      token,
+      user: {
+        userId,
+        name,
+        email,
+        homeId
+      }
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Registration failed." });
+  }
+});
+
+router.post("/login", async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const password = String(req.body.password || "");
+
+    const user = await getUserByEmail(email);
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+
+    if (!valid) {
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    const token = makeToken(user);
+
+    res.json({
+      message: "Login successful.",
+      token,
+      user: {
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        homeId: user.homeId
+      }
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Login failed." });
+  }
+});
+
+module.exports = router;
+
+===== ./routes/energy.js =====
+const express = require("express");
+const crypto = require("crypto");
+
+const { requireAuth, requireIngestionKey } = require("../middleware/auth");
+const {
+  createReading,
+  listReadings,
+  listAllReadings,
+  createAppliance,
+  listAppliances
+} = require("../services/db");
+
+const { getRagRecommendations } = require("../rag");
+
+const router = express.Router();
+
+function normalizeReading(body, fallbackHomeId) {
+  const power = Number(body.power);
+  let energyConsumed = Number(body.energyConsumed);
+
+  if (!Number.isFinite(power) || power < 0) {
+    throw new Error("power must be a non-negative number.");
+  }
+
+  if (!Number.isFinite(energyConsumed) || energyConsumed < 0) {
+    const intervalSeconds = Number(body.intervalSeconds || 60);
+    energyConsumed = (power * intervalSeconds) / 3600000;
+  }
+
+  const timestamp = body.timestamp
+    ? new Date(body.timestamp)
+    : new Date();
+
+  if (Number.isNaN(timestamp.getTime())) {
+    throw new Error("Invalid timestamp.");
+  }
+
+  const homeId = String(body.homeId || fallbackHomeId || "").trim();
+  const deviceId = String(body.deviceId || "").trim();
+  const deviceName = String(body.deviceName || body.name || "").trim();
+
+  if (!homeId || !deviceId || !deviceName) {
+    throw new Error("homeId, deviceId and deviceName are required.");
+  }
+
+  return {
+    homeId,
+    deviceId,
+    deviceName,
+    power: Number(power.toFixed(3)),
+    energyConsumed: Number(energyConsumed.toFixed(8)),
+    timestamp: timestamp.toISOString(),
+    readingId: crypto.randomUUID(),
+    readingKey: `${timestamp.toISOString()}#${crypto.randomUUID()}`,
+    source: body.source || "cloud-ingestion",
+    createdAt: new Date().toISOString()
+  };
+}
+
+async function saveReading(body, homeId) {
+  const reading = normalizeReading(body, homeId);
+  await createReading(reading);
+
+  await createAppliance({
+    homeId: reading.homeId,
+    deviceId: reading.deviceId,
+    name: reading.deviceName,
+    applianceId: `appliance-${reading.deviceId}`,
+    source: reading.source,
+    updatedAt: new Date().toISOString()
+  });
+
+  return reading;
+}
+
+// Cloud/VM ingestion endpoint.
+// A future ESP32 or another approved source can use the same endpoint.
+router.post("/ingest", requireIngestionKey, async (req, res) => {
+  try {
+    const payload = Array.isArray(req.body) ? req.body : [req.body];
+
+    if (payload.length > 500) {
+      return res.status(400).json({
+        message: "Maximum 500 readings per request."
+      });
+    }
+
+    const saved = [];
+
+    for (const item of payload) {
+      saved.push(await saveReading(item, item.homeId));
+    }
+
+    res.status(201).json({
+      message: "Energy readings ingested successfully.",
+      count: saved.length,
+      readings: saved
+    });
+  } catch (error) {
+    console.error("Ingestion error:", error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.post("/readings", requireAuth, async (req, res) => {
+  try {
+    const reading = await saveReading(req.body, req.user.homeId);
+
+    res.status(201).json({
+      message: "Reading stored.",
+      reading
+    });
+  } catch (error) {
+    console.error("Reading error:", error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.get("/readings", requireAuth, async (req, res) => {
+  try {
+    const limit = Math.min(
+      Math.max(Number(req.query.limit) || 500, 1),
+      5000
+    );
+
+    const readings = await listReadings(req.user.homeId, limit);
+
+    res.json({
+      count: readings.length,
+      readings
+    });
+  } catch (error) {
+    console.error("Readings error:", error);
+    res.status(500).json({ message: "Could not load energy readings." });
+  }
+});
+
+router.get("/summary", requireAuth, async (req, res) => {
+  try {
+    const readings = await listAllReadings(req.user.homeId, 5000);
+
+    const totalEnergy = readings.reduce(
+      (sum, r) => sum + Number(r.energyConsumed || 0),
+      0
+    );
+
+    const byDevice = {};
+
+    for (const r of readings) {
+      if (!byDevice[r.deviceId]) {
+        byDevice[r.deviceId] = {
+          deviceId: r.deviceId,
+          deviceName: r.deviceName,
+          energyConsumed: 0,
+          readings: 0
+        };
+      }
+
+      byDevice[r.deviceId].energyConsumed += Number(r.energyConsumed || 0);
+      byDevice[r.deviceId].readings += 1;
+    }
+
+    const devices = Object.values(byDevice)
+      .map(d => ({
+        ...d,
+        energyConsumed: Number(d.energyConsumed.toFixed(6))
+      }))
+      .sort((a, b) => b.energyConsumed - a.energyConsumed);
+
+    const highest = devices[0] || null;
+
+    const highUsage = devices.filter(d => {
+      if (!totalEnergy) return false;
+      return (d.energyConsumed / totalEnergy) >= 0.20;
+    });
+
+    res.json({
+      totalReadings: readings.length,
+      totalEnergy: Number(totalEnergy.toFixed(6)),
+      estimatedCost: Number(
+        (totalEnergy * Number(process.env.COST_PER_KWH || 8)).toFixed(2)
+      ),
+      applianceCount: devices.length,
+      highUsageCount: highUsage.length,
+      highestConsumer: highest
+        ? {
+            ...highest,
+            contribution: Number(
+              ((highest.energyConsumed / totalEnergy) * 100).toFixed(2)
+            )
+          }
+        : null,
+      devices
+    });
+  } catch (error) {
+    console.error("Summary error:", error);
+    res.status(500).json({ message: "Could not calculate summary." });
+  }
+});
+
+router.get("/rag-analysis", requireAuth, async (req, res) => {
+  try {
+    const readings = await listAllReadings(req.user.homeId, 5000);
+
+    const totals = {};
+
+    for (const r of readings) {
+      totals[r.deviceName] =
+        (totals[r.deviceName] || 0) + Number(r.energyConsumed || 0);
+    }
+
+    const ranked = Object.entries(totals)
+      .map(([deviceName, energy]) => ({
+        deviceName,
+        energyConsumed: Number(energy.toFixed(6))
+      }))
+      .sort((a, b) => b.energyConsumed - a.energyConsumed);
+
+    const totalEnergy = ranked.reduce(
+      (sum, d) => sum + d.energyConsumed,
+      0
+    );
+
+    const topDevices = ranked.slice(0, 3);
+
+    const recommendations = [];
+
+    for (const device of topDevices) {
+      const rag = getRagRecommendations(device.deviceName);
+
+      recommendations.push({
+        deviceName: device.deviceName,
+        energyConsumed: device.energyConsumed,
+        recommendations: rag
+      });
+    }
+
+    res.json({
+      totalReadings: readings.length,
+      totalEnergy: Number(totalEnergy.toFixed(6)),
+      highestConsumer: ranked[0] || null,
+      devices: ranked,
+      ragContext: recommendations
+    });
+  } catch (error) {
+    console.error("RAG analysis error:", error);
+    res.status(500).json({ message: "Could not generate RAG analysis." });
+  }
+});
+
+module.exports = router;
+
+===== ./scripts/import-ukdale.js =====
+/**
+ * Import real appliance-level measurements from UK-DALE.
+ *
+ * Expected files:
+ * data/ukdale/house_1/labels.dat
+ * data/ukdale/house_1/channel_<N>.dat
+ *
+ * UK-DALE records appliance power approximately every 6 seconds.
+ * The importer converts power in watts into kWh for each interval.
+ *
+ * Usage:
+ *   node scripts/import-ukdale.js --home HOME_ID --limit 1000
+ *
+ * The HOME_ID must belong to a registered EnergyFlow account.
+ *
+ * You can use STORAGE_MODE=local for development or
+ * STORAGE_MODE=dynamodb on the cloud VM.
+ */
+
+require("dotenv").config();
+
+const fs = require("fs");
+const path = require("path");
+const readline = require("readline");
+const crypto = require("crypto");
+
+const { createReading, createAppliance } = require("../services/db");
+
+const HOUSE_DIR = path.join(
+  __dirname,
+  "..",
+  "data",
+  "ukdale",
+  "house_1"
+);
+
+const wantedNames = [
+  "washing_machine",
+  "washing machine",
+  "fridge",
+  "fridge_freezer",
+  "tv",
+  "kettle",
+  "dishwasher",
+  "dish_washer",
+  "microwave",
+  "toaster"
+];
+
+function arg(name, fallback = null) {
+  const index = process.argv.indexOf(name);
+  return index >= 0 ? process.argv[index + 1] : fallback;
+}
+
+function cleanName(name) {
+  return name
+    .trim()
+    .replace(/^['"]|['"]$/g, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function shouldImport(name) {
+  const normalized = name.toLowerCase().replace(/\s+/g, "_");
+  return wantedNames.some(w => w === normalized || w === name.toLowerCase());
+}
+
+function parseLabels() {
+  const labelsPath = path.join(HOUSE_DIR, "labels.dat");
+
+  if (!fs.existsSync(labelsPath)) {
+    throw new Error(
+      `Missing ${labelsPath}. Download the UK-DALE house_1 labels.dat file first.`
+    );
+  }
+
+  const text = fs.readFileSync(labelsPath, "utf8");
+
+  const result = [];
+
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+
+    const parts = line.split(/\s+/);
+    const channel = Number(parts.shift());
+
+    if (!Number.isFinite(channel)) continue;
+
+    const name = cleanName(parts.join(" "));
+
+    if (shouldImport(name)) {
+      result.push({
+        channel,
+        name
+      });
+    }
+  }
+
+  return result;
+}
+
+async function importChannel(homeId, channel, deviceName, limit) {
+  const filePath = path.join(
+    HOUSE_DIR,
+    `channel_${channel}.dat`
+  );
+
+  if (!fs.existsSync(filePath)) {
+    console.log(`Skipping ${deviceName}: ${filePath} not found`);
+    return 0;
+  }
+
+  const deviceId =
+    `UKDALE-H1-${deviceName.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}`;
+
+  await createAppliance({
+    homeId,
+    deviceId,
+    name: deviceName,
+    applianceId: `ukdale-${channel}`,
+    source: "UK-DALE",
+    updatedAt: new Date().toISOString()
+  });
+
+  const rl = readline.createInterface({
+    input: fs.createReadStream(filePath),
+    crlfDelay: Infinity
+  });
+
+  let previousTimestamp = null;
+  let imported = 0;
+
+  for await (const line of rl) {
+    if (imported >= limit) break;
+    if (!line.trim()) continue;
+
+    const parts = line.trim().split(/\s+/);
+
+    const unixSeconds = Number(parts[0]);
+    const power = Number(parts[1]);
+
+    if (!Number.isFinite(unixSeconds) || !Number.isFinite(power)) {
+      continue;
+    }
+
+    const timestamp = new Date(unixSeconds * 1000);
+
+    let intervalSeconds = 6;
+
+    if (previousTimestamp !== null) {
+      const diff = unixSeconds - previousTimestamp;
+
+      if (diff > 0 && diff <= 3600) {
+        intervalSeconds = diff;
+      }
+    }
+
+    previousTimestamp = unixSeconds;
+
+    const energyConsumed =
+      (Math.max(power, 0) * intervalSeconds) / 3600000;
+
+    const reading = {
+      homeId,
+      deviceId,
+      deviceName,
+      power: Number(Math.max(power, 0).toFixed(3)),
+      energyConsumed: Number(energyConsumed.toFixed(8)),
+      timestamp: timestamp.toISOString(),
+      readingId: crypto.randomUUID(),
+      readingKey: `${timestamp.toISOString()}#${crypto.randomUUID()}`,
+      source: "UK-DALE-real-dataset",
+      createdAt: new Date().toISOString()
+    };
+
+    await createReading(reading);
+    imported++;
+  }
+
+  console.log(`✓ ${deviceName}: imported ${imported} readings`);
+  return imported;
+}
+
+async function main() {
+  const homeId = arg("--home");
+
+  if (!homeId) {
+    throw new Error("Provide --home HOME_ID");
+  }
+
+  const limit = Math.min(
+    Math.max(Number(arg("--limit", "500")), 1),
+    5000
+  );
+
+  console.log("==========================================");
+  console.log(" EnergyFlow - UK-DALE Importer");
+  console.log("==========================================");
+  console.log(`Storage: ${process.env.STORAGE_MODE || "local"}`);
+  console.log(`Home: ${homeId}`);
+  console.log(`Limit per appliance: ${limit}`);
+
+  const channels = parseLabels();
+
+  if (!channels.length) {
+    throw new Error(
+      "No supported appliance channels were found in labels.dat."
+    );
+  }
+
+  console.log("Appliances found:", channels);
+
+  let total = 0;
+
+  for (const item of channels) {
+    total += await importChannel(
+      homeId,
+      item.channel,
+      item.name,
+      limit
+    );
+  }
+
+  console.log(`Finished. Total imported readings: ${total}`);
+}
+
+main().catch(error => {
+  console.error("UK-DALE import failed:", error);
+  process.exit(1);
+});
+
+===== ./scripts/setup-dynamodb.js =====
+require("dotenv").config();
+
+const {
+  CreateTableCommand,
+  DescribeTableCommand
+} = require("@aws-sdk/client-dynamodb");
+
+const { client, region } = require("../config/aws");
+const { TABLES } = require("../services/db");
+
+const definitions = [
+  {
+    TableName: TABLES.users,
+    KeySchema: [{ AttributeName: "email", KeyType: "HASH" }],
+    AttributeDefinitions: [{ AttributeName: "email", AttributeType: "S" }]
+  },
+  {
+    TableName: TABLES.homes,
+    KeySchema: [{ AttributeName: "homeId", KeyType: "HASH" }],
+    AttributeDefinitions: [{ AttributeName: "homeId", AttributeType: "S" }]
+  },
+  {
+    TableName: TABLES.appliances,
+    KeySchema: [
+      { AttributeName: "homeId", KeyType: "HASH" },
+      { AttributeName: "deviceId", KeyType: "RANGE" }
+    ],
+    AttributeDefinitions: [
+      { AttributeName: "homeId", AttributeType: "S" },
+      { AttributeName: "deviceId", AttributeType: "S" }
+    ]
+  },
+  {
+    TableName: TABLES.readings,
+    KeySchema: [
+      { AttributeName: "homeId", KeyType: "HASH" },
+      { AttributeName: "readingKey", KeyType: "RANGE" }
+    ],
+    AttributeDefinitions: [
+      { AttributeName: "homeId", AttributeType: "S" },
+      { AttributeName: "readingKey", AttributeType: "S" },
+      { AttributeName: "deviceId", AttributeType: "S" },
+      { AttributeName: "timestamp", AttributeType: "S" }
+    ],
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "DeviceTimestampIndex",
+        KeySchema: [
+          { AttributeName: "deviceId", KeyType: "HASH" },
+          { AttributeName: "timestamp", KeyType: "RANGE" }
+        ],
+        Projection: { ProjectionType: "ALL"
+        }
+      }
+    ]
+  }
+];
+
+async function tableExists(name) {
+  try {
+    await client.send(new DescribeTableCommand({ TableName: name }));
+    return true;
+  } catch (error) {
+    if (error.name === "ResourceNotFoundException") {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function main() {
+  console.log(`AWS region: ${region}`);
+
+  for (const definition of definitions) {
+    const exists = await tableExists(definition.TableName);
+
+    if (exists) {
+      console.log(`✓ ${definition.TableName} already exists`);
+      continue;
+    }
+
+    await client.send(new CreateTableCommand({
+      ...definition,
+      BillingMode: "PAY_PER_REQUEST"
+    }));
+
+    console.log(`✓ Created ${definition.TableName}`);
+  }
+
+  console.log("DynamoDB setup complete.");
+}
+
+main().catch(error => {
+  console.error("DynamoDB setup failed:", error);
+  process.exit(1);
+});
+
+===== ./server.js =====
+require("dotenv").config();
+
+const path = require("path");
+const express = require("express");
+const cors = require("cors");
+
+const authRoutes = require("./routes/auth");
+const energyRoutes = require("./routes/energy");
+const applianceRoutes = require("./routes/appliances");
+
+const app = express();
+
+const PORT = Number(process.env.PORT || 5000);
+
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    application: "EnergyFlow",
+    cloudReady: true,
+    storageMode: process.env.STORAGE_MODE || "local",
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.use("/api/auth", authRoutes);
+app.use("/api/energy", energyRoutes);
+app.use("/api/appliances", applianceRoutes);
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use((req, res) => {
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ message: "API endpoint not found." });
+  }
+
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "production" ? undefined : err.message
+  });
+});
+
+app.listen(PORT, () => {
+  console.log("==========================================");
+  console.log(" EnergyFlow - Cloud Energy Monitor");
+  console.log("==========================================");
+  console.log(`Server: http://localhost:${PORT}`);
+  console.log(`Storage: ${process.env.STORAGE_MODE || "local"}`);
+  console.log("Health:  /api/health");
+  console.log("==========================================");
+});
+
+===== ./services/db.js =====
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+
+const {
+  PutCommand,
+  GetCommand,
+  QueryCommand,
+  ScanCommand
+} = require("@aws-sdk/lib-dynamodb");
+
+const { docClient } = require("../config/aws");
+
+const MODE = (process.env.STORAGE_MODE || "local").toLowerCase();
+
+const TABLES = {
+  users: "EnergyFlowUsers",
+  homes: "EnergyFlowHomes",
+  appliances: "EnergyFlowAppliances",
+  readings: "EnergyFlowReadings"
+};
+
+const localPath = path.join(__dirname, "..", "data", "local-db.json");
+
+function id(prefix = "") {
+  return `${prefix}${crypto.randomUUID()}`;
+}
+
+function emptyDb() {
+  return {
+    users: [],
+    homes: [],
+    appliances: [],
+    readings: []
+  };
+}
+
+function readLocal() {
+  if (!fs.existsSync(localPath)) {
+    fs.mkdirSync(path.dirname(localPath), { recursive: true });
+    fs.writeFileSync(localPath, JSON.stringify(emptyDb(), null, 2));
+  }
+
+  return JSON.parse(fs.readFileSync(localPath, "utf8"));
+}
+
+function writeLocal(db) {
+  fs.mkdirSync(path.dirname(localPath), { recursive: true });
+  fs.writeFileSync(localPath, JSON.stringify(db, null, 2));
+}
+
+function clone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+async function createUser(user) {
+  if (MODE === "local") {
+    const db = readLocal();
+    db.users.push(clone(user));
+    writeLocal(db);
+    return user;
+  }
+
+  await docClient.send(new PutCommand({
+    TableName: TABLES.users,
+    Item: user
+  }));
+
+  return user;
+}
+
+async function getUserByEmail(email) {
+  const normalized = email.toLowerCase().trim();
+
+  if (MODE === "local") {
+    const db = readLocal();
+    return db.users.find(u => u.email === normalized) || null;
+  }
+
+  const result = await docClient.send(new GetCommand({
+    TableName: TABLES.users,
+    Key: { email: normalized }
+  }));
+
+  return result.Item || null;
+}
+
+async function createHome(home) {
+  if (MODE === "local") {
+    const db = readLocal();
+    db.homes.push(clone(home));
+    writeLocal(db);
+    return home;
+  }
+
+  await docClient.send(new PutCommand({
+    TableName: TABLES.homes,
+    Item: home
+  }));
+
+  return home;
+}
+
+async function getHome(homeId) {
+  if (MODE === "local") {
+    const db = readLocal();
+    return db.homes.find(h => h.homeId === homeId) || null;
+  }
+
+  const result = await docClient.send(new GetCommand({
+    TableName: TABLES.homes,
+    Key: { homeId }
+  }));
+
+  return result.Item || null;
+}
+
+async function createAppliance(appliance) {
+  if (MODE === "local") {
+    const db = readLocal();
+    const existingIndex = db.appliances.findIndex(
+      a => a.homeId === appliance.homeId && a.deviceId === appliance.deviceId
+    );
+
+    if (existingIndex >= 0) {
+      db.appliances[existingIndex] = { ...db.appliances[existingIndex], ...appliance };
+    } else {
+      db.appliances.push(clone(appliance));
+    }
+
+    writeLocal(db);
+    return appliance;
+  }
+
+  await docClient.send(new PutCommand({
+    TableName: TABLES.appliances,
+    Item: appliance
+  }));
+
+  return appliance;
+}
+
+async function listAppliances(homeId) {
+  if (MODE === "local") {
+    const db = readLocal();
+    return db.appliances.filter(a => a.homeId === homeId);
+  }
+
+  const result = await docClient.send(new QueryCommand({
+    TableName: TABLES.appliances,
+    KeyConditionExpression: "homeId = :homeId",
+    ExpressionAttributeValues: { ":homeId": homeId }
+  }));
+
+  return result.Items || [];
+}
+
+async function createReading(reading) {
+  if (MODE === "local") {
+    const db = readLocal();
+    db.readings.push(clone(reading));
+
+    // Keep local development reasonably small.
+    if (db.readings.length > 20000) {
+      db.readings = db.readings.slice(-20000);
+    }
+
+    writeLocal(db);
+    return reading;
+  }
+
+  const item = {
+    ...reading,
+    readingKey: reading.readingKey || `${reading.timestamp}#${reading.readingId || id("reading-")}`
+  };
+
+  await docClient.send(new PutCommand({
+    TableName: TABLES.readings,
+    Item: item
+  }));
+
+  return item;
+}
+
+async function listReadings(homeId, limit = 500) {
+  if (MODE === "local") {
+    const db = readLocal();
+
+    return db.readings
+      .filter(r => r.homeId === homeId)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, limit);
+  }
+
+  const result = await docClient.send(new QueryCommand({
+    TableName: TABLES.readings,
+    KeyConditionExpression: "homeId = :homeId",
+    ExpressionAttributeValues: { ":homeId": homeId },
+    ScanIndexForward: false,
+    Limit: limit
+  }));
+
+  return result.Items || [];
+}
+
+async function listAllReadings(homeId, maxItems = 5000) {
+  if (MODE === "local") {
+    const db = readLocal();
+
+    return db.readings
+      .filter(r => r.homeId === homeId)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, maxItems);
+  }
+
+  const items = [];
+  let ExclusiveStartKey;
+
+  do {
+    const result = await docClient.send(new QueryCommand({
+      TableName: TABLES.readings,
+      KeyConditionExpression: "homeId = :homeId",
+      ExpressionAttributeValues: { ":homeId": homeId },
+      ExclusiveStartKey,
+      ScanIndexForward: false,
+      Limit: Math.min(1000, maxItems - items.length)
+    }));
+
+    items.push(...(result.Items || []));
+    ExclusiveStartKey = result.LastEvaluatedKey;
+
+    if (items.length >= maxItems) break;
+  } while (ExclusiveStartKey);
+
+  return items.slice(0, maxItems);
+}
+
+async function getReadingCount() {
+  if (MODE === "local") {
+    return readLocal().readings.length;
+  }
+
+  // This is only for a health/admin display.
+  const result = await docClient.send(new ScanCommand({
+    TableName: TABLES.readings,
+    Select: "COUNT"
+  }));
+
+  return result.Count || 0;
+}
+
+module.exports = {
+  MODE,
+  TABLES,
+  id,
+  createUser,
+  getUserByEmail,
+  createHome,
+  getHome,
+  createAppliance,
+  listAppliances,
+  createReading,
+  listReadings,
+  listAllReadings,
+  getReadingCount
+};
+

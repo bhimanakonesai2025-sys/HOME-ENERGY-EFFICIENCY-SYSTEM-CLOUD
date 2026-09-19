@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>EnergyFlow | Analytics</title>
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            <span class="logo-icon">⚡</span>
+            <span>EnergyFlow</span>
+        </div>
+
+        <div class="sidebar-label">
+            ENERGY MANAGEMENT
+        </div>
+
+        <nav class="nav">
+
+            <a href="/index.html">
+                <span>🏠</span>
+                Dashboard
+            </a>
+
+            <a
+                href="/analytics.html"
+                class="active"
+            >
+                <span>📊</span>
+                Analytics
+            </a>
+
+            <a href="/trends.html">
+                <span>📈</span>
+                Trends
+            </a>
+
+            <a href="/alerts.html">
+                <span>🚨</span>
+                Alerts
+            </a>
+
+            <a href="/energy-tips.html">
+                <span>💡</span>
+                Energy Tips
+            </a>
+
+            <a href="/reports.html">
+                <span>📄</span>
+                Reports
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="cloud-mini">
+
+                <span class="online-dot"></span>
+
+                EnergyFlow System
+
+                <small id="sidebarStatus">
+                    Connecting...
+                </small>
+
+            </div>
+
+
+            <button
+                id="logoutBtn"
+                class="logout"
+            >
+                ↪ Logout
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ================= MAIN CONTENT ================= -->
+
+    <main class="main">
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <div>
+
+                <div class="eyebrow">
+                    ENERGY INTELLIGENCE
+                </div>
+
+                <h1>
+                    Analytics
+                </h1>
+
+                <p class="page-subtitle">
+                    Understand how appliance-level consumption is distributed.
+                </p>
+
+            </div>
+
+
+            <span
+                id="cloudStatus"
+                class="status"
+            >
+                Checking system...
+            </span>
+
+        </header>
+
+
+        <!-- ================= APPLIANCE INTELLIGENCE ================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Appliance Intelligence
+                    </h2>
+
+                    <p>
+                        Detailed analysis of individual appliance consumption
+                    </p>
+
+                </div>
+
+                <span class="badge">
+                    LIVE ANALYSIS
+                </span>
+
+            </div>
+
+
+            <!-- Appliance Selector -->
+
+            <div class="appliance-selector">
+
+                <label for="applianceSelect">
+                    Select Appliance
+                </label>
+
+
+                <select id="applianceSelect">
+
+                    <option value="">
+                        Loading appliances...
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- Detailed Analysis -->
+
+            <div
+                id="applianceAnalysis"
+                class="appliance-analysis"
+            >
+
+                <div class="loading">
+                    Select an appliance to view detailed analysis.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ENERGY BY APPLIANCE ================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Energy by Appliance
+                    </h2>
+
+                    <p>
+                        Relative contribution of each appliance
+                    </p>
+
+                </div>
+
+                <span class="badge">
+                    ANALYTICS
+                </span>
+
+            </div>
+
+
+            <div id="analyticsBars">
+
+                <div class="loading">
+                    Loading...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= CONSUMPTION ANALYSIS ================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Consumption Analysis
+                    </h2>
+
+                    <p>
+                        Automated analysis of household energy usage
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="analysisText"
+                class="insight-box"
+            >
+
+                <div class="loading">
+                    Loading...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= RAG KNOWLEDGE ================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        RAG Knowledge Retrieval
+                    </h2>
+
+                    <p>
+                        Appliance-specific information retrieved from the
+                        EnergyFlow knowledge base
+                    </p>
+
+                </div>
+
+                <span class="badge">
+                    RAG ENABLED
+                </span>
+
+            </div>
+
+
+            <div id="ragText">
+
+                <div class="loading">
+                    Loading knowledge retrieval...
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script src="/script.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>EnergyFlow | Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <span class="logo-icon">⚡</span>
+
+            EnergyFlow
+
+        </div>
+
+
+        <div class="sidebar-label">
+            ENERGY MANAGEMENT
+        </div>
+
+
+        <nav class="nav">
+
+            <a
+                href="/index.html"
+                class="active"
+            >
+                <span>🏠</span>
+                Dashboard
+            </a>
+
+            <a href="/analytics.html">
+                <span>📊</span>
+                Analytics
+            </a>
+
+            <a href="/trends.html">
+                <span>📈</span>
+                Trends
+            </a>
+
+            <a href="/alerts.html">
+                <span>🚨</span>
+                Alerts
+            </a>
+
+            <a href="/energy-tips.html">
+                <span>💡</span>
+                Energy Tips
+            </a>
+
+            <a href="/reports.html">
+                <span>📄</span>
+                Reports
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="cloud-mini">
+
+                <span class="online-dot"></span>
+
+                EnergyFlow System
+
+                <small id="sidebarStatus">
+                    Storage: local
+                </small>
+
+            </div>
+
+
+            <button
+                id="logoutBtn"
+                class="logout"
+            >
+                ↪ Logout
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+
+        <header class="topbar">
+
+            <div>
+
+                <div class="eyebrow">
+                    HOME ENERGY MONITORING
+                </div>
+
+                <h1>
+                    Energy Dashboard
+                </h1>
+
+                <p class="page-subtitle">
+                    Monitor, analyze and understand your
+                    household energy consumption.
+                </p>
+
+            </div>
+
+
+            <span
+                id="cloudStatus"
+                class="status"
+            >
+                ● System Online
+            </span>
+
+        </header>
+        <div
+    id="referenceDataBanner"
+    class="reference-data-banner"
+    style="display: none;"
+>
+
+    <div class="reference-data-icon">
+        📊
+    </div>
+
+    <div>
+        <strong>
+            REFERENCE DATASET — UK-DALE
+        </strong>
+
+        <p>
+            Real measured appliance-level data used
+            for demonstration and analysis.
+        </p>
+    </div>
+
+</div>
+
+
+        <!-- =================================================
+             METRICS
+             ================================================= -->
+
+        <section class="dashboard-grid">
+
+
+            <div class="metric-card">
+
+                <span class="metric-icon">
+                    ⚡
+                </span>
+
+                <span class="metric-label">
+                    TOTAL ENERGY
+                </span>
+
+                <strong id="totalEnergy">
+                    0.000 kWh
+                </strong>
+
+                <small>
+                    Total analyzed consumption
+                </small>
+
+            </div>
+
+
+
+            <div class="metric-card">
+
+                <span class="metric-icon">
+                    ₹
+                </span>
+
+                <span class="metric-label">
+                    ESTIMATED COST
+                </span>
+
+                <strong id="estimatedCost">
+                    ₹0.00
+                </strong>
+
+                <small>
+                    Based on configured tariff
+                </small>
+
+            </div>
+
+
+
+            <div class="metric-card">
+
+                <span class="metric-icon">
+                    ◉
+                </span>
+
+                <span class="metric-label">
+                    APPLIANCES
+                </span>
+
+                <strong id="applianceCount">
+                    0
+                </strong>
+
+                <small>
+                    Devices analyzed
+                </small>
+
+            </div>
+
+
+
+            <div class="metric-card">
+
+                <span class="metric-icon">
+                    ⌁
+                </span>
+
+                <span class="metric-label">
+                    READINGS
+                </span>
+
+                <strong id="readingCount">
+                    0
+                </strong>
+
+                <small>
+                    Real measured readings
+                </small>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             HIGHEST CONSUMER
+             ================================================= -->
+
+        <section
+            class="panel"
+            id="highestConsumerCard"
+        >
+
+            <div
+                class="highest-consumer"
+            >
+
+                <div class="highest-icon">
+                    🏆
+                </div>
+
+
+                <div class="highest-content">
+
+                    <span class="metric-label">
+                        HIGHEST ENERGY CONSUMER
+                    </span>
+
+                    <h2 id="highestConsumer">
+                        Loading...
+                    </h2>
+
+                    <p>
+                        <span id="highestConsumerEnergy">
+                            Loading appliance consumption...
+                        </span>
+                    </p>
+
+                </div>
+
+
+                <div class="highest-percent">
+
+                    <strong id="highestContribution">
+                        0%
+                    </strong>
+
+                    <span>
+                        contribution
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             ENERGY BY APPLIANCE
+             ================================================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Energy by Appliance
+                    </h2>
+
+                    <p>
+                        Share of analyzed household consumption
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="/analytics.html"
+                    class="panel-link"
+                >
+                    View analytics →
+                </a>
+
+            </div>
+
+
+            <div id="energyByAppliance">
+
+                <div class="loading">
+                    Loading energy data...
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             SMART INSIGHT
+             ================================================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Smart Insight
+                    </h2>
+
+                    <p>
+                        EnergyFlow analysis
+                    </p>
+
+                </div>
+
+
+                <span class="badge">
+                    ANALYZED
+                </span>
+
+            </div>
+
+
+            <div
+                id="smartInsight"
+                class="insight-box"
+            >
+
+                <div class="loading">
+                    Analyzing...
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             EXPLORE
+             ================================================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Explore EnergyFlow
+                    </h2>
+
+                    <p>
+                        Tools to understand your energy consumption
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="quick-actions">
+
+
+                <a
+                    href="/trends.html"
+                    class="quick-action"
+                >
+
+                    <span>
+                        📈
+                    </span>
+
+                    <strong>
+                        Consumption Trends
+                    </strong>
+
+                    <small>
+                        Explore readings over time
+                    </small>
+
+                </a>
+
+
+
+                <a
+                    href="/alerts.html"
+                    class="quick-action"
+                >
+
+                    <span>
+                        🚨
+                    </span>
+
+                    <strong>
+                        Energy Alerts
+                    </strong>
+
+                    <small>
+                        Identify high-usage appliances
+                    </small>
+
+                </a>
+
+
+
+                <a
+                    href="/energy-tips.html"
+                    class="quick-action"
+                >
+
+                    <span>
+                        💡
+                    </span>
+
+                    <strong>
+                        Smart Tips
+                    </strong>
+
+                    <small>
+                        Get appliance-specific advice
+                    </small>
+
+                </a>
+
+
+
+                <a
+                    href="/reports.html"
+                    class="quick-action"
+                >
+
+                    <span>
+                        📄
+                    </span>
+
+                    <strong>
+                        Reports
+                    </strong>
+
+                    <small>
+                        View analyzed energy data
+                    </small>
+
+                </a>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             RECENT READINGS
+             ================================================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Recent Energy Readings
+                    </h2>
+
+                    <p>
+                        Latest appliance-level measurements
+                    </p>
+
+                </div>
+
+
+                <span class="badge">
+                    LIVE DATA
+                </span>
+
+            </div>
+
+
+            <div id="recentReadings">
+
+                <div class="loading">
+                    Loading readings...
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script src="/script.js"></script>
+
+</body>
+
+</html>
