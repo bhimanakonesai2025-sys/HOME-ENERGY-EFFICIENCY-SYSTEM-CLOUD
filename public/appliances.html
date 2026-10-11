@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Appliances | EnergyFlow</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .page-intro {
+            margin-bottom: 28px;
+        }
+
+        .page-intro h1 {
+            margin-bottom: 8px;
+        }
+
+        .page-intro p {
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .dataset-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 22px 24px;
+            margin-bottom: 26px;
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            background: linear-gradient(120deg, #eff6ff, #f0fdfa);
+        }
+
+        .dataset-banner h2 {
+            margin: 0 0 8px;
+            font-size: 18px;
+            color: #16365c;
+        }
+
+        .dataset-banner p {
+            margin: 0;
+            color: #64748b;
+            line-height: 1.6;
+            font-size: 13px;
+        }
+
+        .dataset-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 12px;
+            border-radius: 20px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .appliance-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 26px;
+        }
+
+        .summary-card {
+            padding: 22px;
+            border: 1px solid #e5eaf2;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 5px 20px rgba(15, 23, 42, 0.035);
+        }
+
+        .summary-label {
+            color: #718096;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .summary-value {
+            color: #15233b;
+            font-size: 28px;
+            font-weight: 750;
+        }
+
+        .summary-note {
+            margin-top: 8px;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .appliance-section {
+            padding: 25px;
+        }
+
+        .appliance-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .appliance-section-header h2 {
+            margin: 0 0 7px;
+            font-size: 21px;
+        }
+
+        .appliance-section-header p {
+            margin: 0;
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .appliance-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .appliance-card {
+            min-width: 0;
+            padding: 21px;
+            border: 1px solid #e5eaf2;
+            border-radius: 15px;
+            background: #fff;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .appliance-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+        }
+
+        .appliance-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .appliance-icon {
+            display: flex;
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            background: #eff6ff;
+            font-size: 24px;
+        }
+
+        .appliance-status {
+            padding: 6px 9px;
+            border-radius: 20px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .appliance-name {
+            margin: 0 0 7px;
+            font-size: 17px;
+            color: #17243b;
+            overflow-wrap: anywhere;
+        }
+
+        .appliance-category {
+            margin-bottom: 20px;
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .appliance-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding-top: 17px;
+            border-top: 1px solid #edf0f5;
+        }
+
+        .metric-label {
+            display: block;
+            margin-bottom: 6px;
+            color: #94a3b8;
+            font-size: 11px;
+        }
+
+        .metric-value {
+            color: #26364d;
+            font-size: 15px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .source-note {
+            margin-top: 22px;
+            padding: 15px 17px;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .state-message {
+            padding: 35px 20px;
+            text-align: center;
+            color: #64748b;
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            line-height: 1.7;
+        }
+
+        .state-message strong {
+            display: block;
+            color: #1e293b;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .refresh-button {
+            cursor: pointer;
+        }
+
+        @media (max-width: 1050px) {
+            .appliance-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 700px) {
+            .appliance-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .appliance-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dataset-banner {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .appliance-section {
+                padding: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-icon">⚡</span>
+            <span>EnergyFlow</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/index.html">
+                <span class="nav-icon">▦</span>
+                Dashboard
+            </a>
+
+            <a href="/appliances.html" class="active">
+                <span class="nav-icon">⌂</span>
+                Appliances
+            </a>
+
+            <a href="/analytics.html">
+                <span class="nav-icon">▥</span>
+                Analytics
+            </a>
+
+            <a href="/alerts.html">
+                <span class="nav-icon">♧</span>
+                Alerts
+            </a>
+
+            <a href="/recommendations.html">
+                <span class="nav-icon">✧</span>
+                Recommendations
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="small muted">Cloud Energy Monitoring</div>
+
+            <button
+                class="btn btn-secondary btn-block"
+                type="button"
+                onclick="EnergyAPI.logout()"
+            >
+                Sign out
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar page-intro">
+            <div>
+                <h1>Appliances</h1>
+                <p>
+                    Explore household appliances using measured UK-DALE
+                    electricity data.
+                </p>
+            </div>
+        </header>
+
+        <section class="dataset-banner">
+            <div>
+                <h2>⚡ UK-DALE Dataset · House 1</h2>
+                <p>
+                    Real, publicly collected household electricity
+                    measurements are used for this demonstration.
+                    These readings are not measurements from your own home.
+                </p>
+            </div>
+
+            <span class="dataset-badge">
+                ● Dataset connected
+            </span>
+        </section>
+
+        <section class="appliance-summary">
+
+            <article class="summary-card">
+                <div class="summary-label">Imported appliances</div>
+                <div class="summary-value" id="total-appliances">—</div>
+                <div class="summary-note">Retrieved from your dataset-backed home</div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-label">Recorded measurements</div>
+                <div class="summary-value" id="total-readings">—</div>
+                <div class="summary-note">Readings returned by the energy API</div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-label">Measured energy</div>
+                <div class="summary-value" id="total-energy">—</div>
+                <div class="summary-note">Calculated from available readings</div>
+            </article>
+
+        </section>
+
+        <section class="card appliance-section">
+
+            <div class="appliance-section-header">
+                <div>
+                    <h2>Household appliances</h2>
+                    <p>Appliances imported from UK-DALE House 1.</p>
+                </div>
+
+                <button
+                    class="btn btn-secondary refresh-button"
+                    id="refresh-appliances"
+                    type="button"
+                >
+                    ↻ Refresh
+                </button>
+            </div>
+
+            <div id="appliance-message" class="state-message">
+                <strong>Loading appliance data...</strong>
+                Please wait while EnergyFlow retrieves your appliances.
+            </div>
+
+            <div
+                id="appliance-grid"
+                class="appliance-grid"
+                hidden
+            ></div>
+
+            <div class="source-note">
+                <strong>Data provenance:</strong>
+                UK-DALE, a published dataset containing real household
+                electricity measurements. Appliance power observations
+                are measured values; rated power is not assumed to be a
+                manufacturer specification.
+            </div>
+
+        </section>
+
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/appliances.js"></script>
+
+</body>
+</html>

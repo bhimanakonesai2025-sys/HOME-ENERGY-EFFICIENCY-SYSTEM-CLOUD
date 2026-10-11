@@ -1,268 +1,233 @@
+"use strict";
+
 const express = require("express");
 
 const {
-    requireAuth
-} = require("../middleware/auth");
+    getCollection,
+    COLLECTIONS
+} = require("../database/mongodb");
 
-const {
-    listAllReadings,
-    createAppliance,
-    listAppliances
-} = require("../services/db");
-
-const {
-    getRagRecommendations
-} = require("../rag");
+const { requireAuth } = require("../middleware/auth");
+const { getOwnedHome } = require("../services/energyService");
 
 const router = express.Router();
 
+router.use(requireAuth);
 
-/* ============================================================
-   APPLIANCE LIST
-   ============================================================ */
+function toNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+}
 
-router.get(
-    "/",
-    requireAuth,
-    async (req, res) => {
+/*
+ * GET /api/appliances
+ *
+ * Returns dataset-backed appliances with actual reading statistics.
+ */
+router.get("/", async (req, res, next) => {
+    try {
+        const home = await getOwnedHome(
+            req.user.userId,
+            req.query.homeId
+        );
 
-        try {
+        const appliancesCollection = getCollection(
+            COLLECTIONS.APPLIANCES
+        );
 
-            const appliances =
-                await listAppliances(
-                    req.user.homeId
-                );
+        const readingsCollection = getCollection(
+            COLLECTIONS.READINGS
+        );
 
-            res.json({
-                appliances
-            });
+        const appliances = await appliancesCollection
+            .find(
+                { homeId: home.homeId },
+                { projection: { _id: 0 } }
+            )
+            .sort({ name: 1 })
+            .toArray();
 
-        } catch (error) {
+        const statistics = await readingsCollection.aggregate([
+            {
+                $match: {
+                    homeId: home.homeId
+                }
+            },
+            {
+                $group: {
+                    _id: "$applianceId",
 
-            console.error(
-                "Appliance list error:",
-                error
+                    readingCount: {
+                        $sum: 1
+                    },
+
+                    totalEnergyKwh: {
+                        $sum: {
+                            $convert: {
+                                input: "$energyKwh",
+                                to: "double",
+                                onError: 0,
+                                onNull: 0
+                            }
+                        }
+                    },
+
+                    averagePowerWatts: {
+                        $avg: {
+                            $convert: {
+                                input: "$powerWatts",
+                                to: "double",
+                                onError: 0,
+                                onNull: 0
+                            }
+                        }
+                    }
+                }
+            }
+        ]).toArray();
+
+        const statisticsByAppliance = new Map(
+            statistics.map((item) => [
+                item._id,
+                item
+            ])
+        );
+
+        const enrichedAppliances = appliances.map((appliance) => {
+            const stats = statisticsByAppliance.get(
+                appliance.applianceId
             );
 
-            res.status(500).json({
-                message:
-                    "Could not load appliances."
-            });
-        }
+            return {
+                ...appliance,
+
+                readingCount: stats?.readingCount || 0,
+
+                totalEnergyKwh: Number(
+                    (stats?.totalEnergyKwh || 0).toFixed(8)
+                ),
+
+                averagePowerWatts: Number(
+                    (stats?.averagePowerWatts || 0).toFixed(2)
+                ),
+
+                dataSource: appliance.source || "UK-DALE"
+            };
+        });
+
+        const totalReadings = enrichedAppliances.reduce(
+            (sum, appliance) => sum + appliance.readingCount,
+            0
+        );
+
+        const totalEnergyKwh = enrichedAppliances.reduce(
+            (sum, appliance) => sum + appliance.totalEnergyKwh,
+            0
+        );
+
+        res.json({
+            success: true,
+
+            homeId: home.homeId,
+
+            count: enrichedAppliances.length,
+
+            summary: {
+                totalAppliances: enrichedAppliances.length,
+                totalReadings,
+                totalEnergyKwh: Number(
+                    totalEnergyKwh.toFixed(8)
+                )
+            },
+
+            dataSource: {
+                name: "UK-DALE",
+                house: 1,
+                description:
+                    "Historical electricity measurements from the UK-DALE dataset. These are not live readings from the user's physical home."
+            },
+
+            appliances: enrichedAppliances
+        });
+    } catch (error) {
+        next(error);
     }
-);
+});
 
+/*
+ * PATCH /api/appliances/:applianceId
+ *
+ * Updates the status of an existing appliance.
+ * Manual appliance creation is intentionally disabled.
+ */
+router.patch("/:applianceId", async (req, res, next) => {
+    try {
+        const home = await getOwnedHome(
+            req.user.userId,
+            req.body.homeId || req.query.homeId
+        );
 
-/* ============================================================
-   APPLIANCE INTELLIGENCE
-   ============================================================ */
+        const updates = {
+            updatedAt: new Date().toISOString()
+        };
 
-router.get(
-    "/:deviceId",
-    requireAuth,
-    async (req, res) => {
+        if (req.body.status !== undefined) {
+            const status = String(req.body.status);
 
-        try {
-
-            const readings =
-                await listAllReadings(
-                    req.user.homeId,
-                    20000
-                );
-
-
-            const deviceReadings =
-                readings.filter(
-                    reading =>
-                        reading.deviceId ===
-                        req.params.deviceId
-                );
-
-
-            if (!deviceReadings.length) {
-
-                return res.status(404).json({
-                    message:
-                        "No readings found for this appliance."
+            if (!["active", "inactive"].includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Status must be active or inactive."
                 });
             }
 
-
-            const deviceName =
-                deviceReadings[0].deviceName;
-
-
-            let totalEnergy = 0;
-
-            let totalPower = 0;
-
-            let minimumPower =
-                Infinity;
-
-            let maximumPower =
-                -Infinity;
-
-
-            for (
-                const reading of
-                deviceReadings
-            ) {
-
-                const energy =
-                    Number(
-                        reading.energyConsumed ||
-                        0
-                    );
-
-                const power =
-                    Number(
-                        reading.power ||
-                        0
-                    );
-
-
-                totalEnergy +=
-                    energy;
-
-                totalPower +=
-                    power;
-
-
-                minimumPower =
-                    Math.min(
-                        minimumPower,
-                        power
-                    );
-
-
-                maximumPower =
-                    Math.max(
-                        maximumPower,
-                        power
-                    );
-
-            }
-
-
-            const allEnergy =
-                readings.reduce(
-                    (sum, reading) =>
-                        sum +
-                        Number(
-                            reading.energyConsumed ||
-                            0
-                        ),
-                    0
-                );
-
-
-            const contribution =
-                allEnergy > 0
-                    ? (
-                        totalEnergy /
-                        allEnergy
-                    ) * 100
-                    : 0;
-
-
-            const averagePower =
-                totalPower /
-                deviceReadings.length;
-
-
-            const costPerKwh =
-                Number(
-                    process.env.COST_PER_KWH ||
-                    8
-                );
-
-
-            const estimatedCost =
-                totalEnergy *
-                costPerKwh;
-
-
-            const recommendations =
-                getRagRecommendations(
-                    deviceName
-                );
-
-
-            const sorted =
-                [...deviceReadings]
-                    .sort(
-                        (a, b) =>
-                            new Date(a.timestamp) -
-                            new Date(b.timestamp)
-                    );
-
-
-            res.json({
-
-                deviceId:
-                    req.params.deviceId,
-
-                deviceName,
-
-                totalEnergy:
-                    Number(
-                        totalEnergy.toFixed(6)
-                    ),
-
-                estimatedCost:
-                    Number(
-                        estimatedCost.toFixed(2)
-                    ),
-
-                contribution:
-                    Number(
-                        contribution.toFixed(2)
-                    ),
-
-                readings:
-                    deviceReadings.length,
-
-                averagePower:
-                    Number(
-                        averagePower.toFixed(2)
-                    ),
-
-                minimumPower:
-                    Number(
-                        minimumPower.toFixed(2)
-                    ),
-
-                maximumPower:
-                    Number(
-                        maximumPower.toFixed(2)
-                    ),
-
-                firstReading:
-                    sorted[0].timestamp,
-
-                lastReading:
-                    sorted[
-                        sorted.length - 1
-                    ].timestamp,
-
-                recommendations
-
-            });
-
-        } catch (error) {
-
-            console.error(
-                "Appliance intelligence error:",
-                error
-            );
-
-            res.status(500).json({
-                message:
-                    "Could not analyze appliance."
+            updates.status = status;
+        } else {
+            return res.status(400).json({
+                success: false,
+                error: "Only appliance status updates are supported."
             });
         }
-    }
-);
 
+        const result = await getCollection(
+            COLLECTIONS.APPLIANCES
+        ).updateOne(
+            {
+                homeId: home.homeId,
+                applianceId: req.params.applianceId
+            },
+            {
+                $set: updates
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                error: "Appliance not found."
+            });
+        }
+
+        const appliance = await getCollection(
+            COLLECTIONS.APPLIANCES
+        ).findOne(
+            {
+                homeId: home.homeId,
+                applianceId: req.params.applianceId
+            },
+            {
+                projection: { _id: 0 }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: "Appliance status updated.",
+            appliance
+        });
+    } catch (error) {
+        next(error);
+    }
+});
 
 module.exports = router;

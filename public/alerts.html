@@ -1,445 +1,324 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Alerts | EnergyFlow</title>
+    <link rel="stylesheet" href="/css/style.css">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <style>
+        .page-heading { margin-bottom: 26px; }
+        .page-heading h1 { margin-bottom: 8px; }
+        .page-heading p { color: #718096; line-height: 1.6; }
 
-    <title>EnergyFlow | Alerts</title>
+        .source-banner {
+            padding: 20px 24px;
+            margin-bottom: 25px;
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            background: linear-gradient(120deg, #eff6ff, #f0fdfa);
+        }
 
-    <link
-        rel="stylesheet"
-        href="/style.css"
-    >
+        .source-banner h2 {
+            margin: 0 0 7px;
+            color: #16365c;
+            font-size: 17px;
+        }
 
+        .source-banner p {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            padding: 22px;
+            border: 1px solid #e5eaf2;
+            border-radius: 16px;
+            background: white;
+        }
+
+        .summary-label {
+            color: #718096;
+            font-size: 13px;
+            margin-bottom: 13px;
+        }
+
+        .summary-value {
+            color: #17243b;
+            font-size: 28px;
+            font-weight: 750;
+        }
+
+        .summary-note {
+            margin-top: 8px;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .section-card {
+            padding: 25px;
+            margin-bottom: 24px;
+        }
+
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .section-heading h2 {
+            margin: 0 0 7px;
+            font-size: 20px;
+        }
+
+        .section-heading p {
+            margin: 0;
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-button {
+            padding: 9px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            background: white;
+            color: #475569;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .filter-button.active {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            color: white;
+        }
+
+        .table-wrap { width: 100%; overflow-x: auto; }
+
+        .alerts-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .alerts-table th {
+            padding: 15px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .alerts-table td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #edf0f5;
+            color: #334155;
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        .alerts-table tr:last-child td { border-bottom: none; }
+
+        .severity {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .severity-high {
+            color: #b91c1c;
+            background: #fee2e2;
+        }
+
+        .severity-medium {
+            color: #92400e;
+            background: #fef3c7;
+        }
+
+        .severity-low {
+            color: #166534;
+            background: #dcfce7;
+        }
+
+        .status-badge {
+            color: #475569;
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+
+        .state-box {
+            padding: 38px 20px;
+            text-align: center;
+            color: #64748b;
+            line-height: 1.7;
+        }
+
+        .state-box h3 {
+            margin: 0 0 8px;
+            color: #1e293b;
+        }
+
+        .error-box {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            background: #fef2f2;
+            color: #b91c1c;
+            font-size: 13px;
+        }
+
+        [hidden] { display: none !important; }
+
+        @media (max-width: 700px) {
+            .summary-grid { grid-template-columns: 1fr; }
+            .section-card { padding: 16px; }
+        }
+    </style>
 </head>
 
 <body>
-
-<div class="app">
-
-    <!-- ================= SIDEBAR ================= -->
+<div class="app-layout">
 
     <aside class="sidebar">
-
-        <div class="logo">
-
-            <span class="logo-icon">
-                ⚡
-            </span>
-
-            <span>
-                EnergyFlow
-            </span>
-
+        <div class="brand">
+            <span class="brand-icon">⚡</span>
+            <span>EnergyFlow</span>
         </div>
 
-
-        <div class="sidebar-label">
-            ENERGY MANAGEMENT
-        </div>
-
-
-        <nav class="nav">
-
-            <a href="/index.html">
-
-                <span>
-                    🏠
-                </span>
-
-                Dashboard
-
-            </a>
-
-
-            <a href="/analytics.html">
-
-                <span>
-                    📊
-                </span>
-
-                Analytics
-
-            </a>
-
-
-            <a href="/trends.html">
-
-                <span>
-                    📈
-                </span>
-
-                Trends
-
-            </a>
-
-
-            <a
-                href="/alerts.html"
-                class="active"
-            >
-
-                <span>
-                    🚨
-                </span>
-
-                Alerts
-
-            </a>
-
-
-            <a href="/energy-tips.html">
-
-                <span>
-                    💡
-                </span>
-
-                Energy Tips
-
-            </a>
-
-
-            <a href="/reports.html">
-
-                <span>
-                    📄
-                </span>
-
-                Reports
-
-            </a>
-
+        <nav class="sidebar-nav">
+            <a href="/index.html"><span class="nav-icon">▦</span> Dashboard</a>
+            <a href="/appliances.html"><span class="nav-icon">⌂</span> Appliances</a>
+            <a href="/analytics.html"><span class="nav-icon">▥</span> Analytics</a>
+            <a href="/alerts.html" class="active"><span class="nav-icon">♧</span> Alerts</a>
+            <a href="/recommendations.html"><span class="nav-icon">✧</span> Recommendations</a>
         </nav>
 
-
         <div class="sidebar-bottom">
-
-            <div class="cloud-mini">
-
-                <span class="online-dot"></span>
-
-                EnergyFlow System
-
-                <small id="sidebarStatus">
-                    Connecting...
-                </small>
-
-            </div>
-
-
-            <button
-                id="logoutBtn"
-                class="logout"
-            >
-
-                ↪ Logout
-
+            <div class="small muted">Cloud Energy Monitoring</div>
+            <button class="btn btn-secondary btn-block" id="logout-button" type="button">
+                Sign out
             </button>
-
         </div>
-
     </aside>
 
+    <main class="main-content">
 
-    <!-- ================= MAIN ================= -->
-
-    <main class="main">
-
-        <!-- HEADER -->
-
-        <header class="topbar">
-
+        <header class="topbar page-heading">
             <div>
-
-                <div class="eyebrow">
-                    ENERGY SAFETY
-                </div>
-
-
-                <h1>
-                    Energy Alerts
-                </h1>
-
-
-                <p class="page-subtitle">
-                    Detect unusual and high-consumption appliance behaviour.
-                </p>
-
+                <h1>Energy Alerts</h1>
+                <p>Review unusual energy usage detected from available measurements.</p>
             </div>
 
-
-            <span
-                id="cloudStatus"
-                class="status"
-            >
-                Checking system...
-            </span>
-
+            <button class="btn btn-primary" id="refresh-button" type="button">
+                ↻ Refresh
+            </button>
         </header>
 
-
-        <!-- ================= ALERT SUMMARY ================= -->
-
-        <section class="alert-metrics-grid">
-
-    <div class="alert-metric-card">
-
-        <span class="metric-label">
-            ACTIVE ALERTS
-        </span>
-
-        <strong id="alertCount">
-            0
-        </strong>
-
-        <small>
-            Detected conditions
-        </small>
-
-    </div>
-
-
-    <div class="alert-metric-card">
-
-        <span class="metric-label">
-            ANALYZED READINGS
-        </span>
-
-        <strong id="alertReadings">
-            0
-        </strong>
-
-        <small>
-            Used for detection
-        </small>
-
-    </div>
-
-
-    <div class="alert-metric-card">
-
-        <span class="metric-label">
-            HIGH SEVERITY
-        </span>
-
-        <strong id="highAlertCount">
-            0
-        </strong>
-
-        <small>
-            Requires attention
-        </small>
-
-    </div>
-
-
-    <div class="alert-metric-card">
-
-        <span class="metric-label">
-            ENERGY ANALYZED
-        </span>
-
-        <strong id="alertEnergy">
-            0.000 kWh
-        </strong>
-
-        <small>
-            Recorded energy
-        </small>
-
-    </div>
-
-</section>
-
-        <!-- ================= ALERTS ================= -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <h2>
-                        Detected Conditions
-                    </h2>
-
-
-                    <p>
-                        Alerts generated from appliance-level energy analysis
-                    </p>
-
-                </div>
-
-
-                <span class="badge">
-                    AUTOMATED
-                </span>
-
-            </div>
-
-
-            <div id="alertsContainer">
-
-                <div class="loading">
-                    Analyzing energy usage...
-                </div>
-
-            </div>
-
+        <section class="source-banner">
+            <h2>⚡ Monitoring · UK-DALE House 1</h2>
+            <p>
+                This demonstration uses published household energy measurements.
+                Alerts are displayed only when the backend has generated them.
+                Dataset readings are not from your physical home.
+            </p>
         </section>
 
+        <div id="alerts-error" class="error-box" role="alert" hidden></div>
 
-        <!-- ================= ALERT TYPES ================= -->
+        <section class="summary-grid">
+            <article class="summary-card">
+                <div class="summary-label">Total alerts</div>
+                <div class="summary-value" id="total-alerts">—</div>
+                <div class="summary-note">Alerts returned by the backend</div>
+            </article>
 
-        <section class="panel">
+            <article class="summary-card">
+                <div class="summary-label">High severity</div>
+                <div class="summary-value" id="high-alerts">—</div>
+                <div class="summary-note">Requires closer attention</div>
+            </article>
 
-            <div class="panel-header">
-
-                <div>
-
-                    <h2>
-                        Detection Rules
-                    </h2>
-
-
-                    <p>
-                        Conditions currently monitored by EnergyFlow
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="alert-rules">
-
-                <div class="alert-rule">
-
-                    <div class="alert-rule-icon">
-                        🔴
-                    </div>
-
-
-                    <div>
-
-                        <h3>
-                            High Energy Contribution
-                        </h3>
-
-
-                        <p>
-                            Triggered when an appliance contributes
-                            at least 20% of the recorded household
-                            energy consumption.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="alert-rule">
-
-                    <div class="alert-rule-icon">
-                        🟠
-                    </div>
-
-
-                    <div>
-
-                        <h3>
-                            High Power
-                        </h3>
-
-
-                        <p>
-                            Triggered when an appliance reaches a
-                            peak power level at least 20% above
-                            its average recorded power.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="alert-rule">
-
-                    <div class="alert-rule-icon">
-                        🔵
-                    </div>
-
-
-                    <div>
-
-                        <h3>
-                            Variable Usage Pattern
-                        </h3>
-
-
-                        <p>
-                            Triggered when the difference between
-                            minimum and maximum recorded power
-                            indicates substantial variation.
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+            <article class="summary-card">
+                <div class="summary-label">Unresolved</div>
+                <div class="summary-value" id="open-alerts">—</div>
+                <div class="summary-note">Alerts not yet resolved</div>
+            </article>
         </section>
 
-
-        <!-- ================= SYSTEM NOTE ================= -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
+        <section class="card section-card">
+            <div class="section-heading">
                 <div>
-
-                    <h2>
-                        About Energy Alerts
-                    </h2>
-
-
-                    <p>
-                        How EnergyFlow interprets consumption data
-                    </p>
-
+                    <h2>Alert history</h2>
+                    <p>Review alerts generated by EnergyFlow's detection service.</p>
                 </div>
-
             </div>
 
-
-            <div
-                class="insight-box"
-                id="alertInsight"
-            >
-
-                <div class="loading">
-                    Preparing alert analysis...
-                </div>
-
+            <div class="filter-row" aria-label="Filter alerts">
+                <button class="filter-button active" data-filter="all">All alerts</button>
+                <button class="filter-button" data-filter="high">High severity</button>
+                <button class="filter-button" data-filter="medium">Medium severity</button>
+                <button class="filter-button" data-filter="low">Low severity</button>
             </div>
 
+            <div class="table-wrap">
+                <table class="alerts-table">
+                    <thead>
+                    <tr>
+                        <th>Appliance</th>
+                        <th>Alert details</th>
+                        <th>Severity</th>
+                        <th>Status</th>
+                        <th>Detected</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="alerts-table-body">
+                    <tr>
+                        <td colspan="5">Loading alerts...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="alerts-empty" class="state-box" hidden>
+                <h3>No alerts for this filter</h3>
+                <p>No matching alerts were returned by the backend.</p>
+            </div>
         </section>
 
     </main>
-
 </div>
 
-
-<script src="/script.js"></script>
-
+<script src="/js/api.js"></script>
+<script src="/js/alerts.js"></script>
+<script>
+    document.getElementById("logout-button").addEventListener("click", () => {
+        EnergyAPI.logout();
+    });
+</script>
 </body>
-
 </html>

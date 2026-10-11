@@ -1,318 +1,500 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Analytics | EnergyFlow</title>
 
-    <title>EnergyFlow | Analytics</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <link
-        rel="stylesheet"
-        href="/style.css"
-    >
+    <style>
+        .analytics-intro {
+            margin-bottom: 26px;
+        }
 
+        .analytics-intro h1 {
+            margin-bottom: 8px;
+        }
+
+        .analytics-intro p {
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .dataset-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 18px;
+            padding: 20px 24px;
+            margin-bottom: 25px;
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            background: linear-gradient(120deg, #eff6ff, #f0fdfa);
+        }
+
+        .dataset-banner h2 {
+            margin: 0 0 7px;
+            color: #16365c;
+            font-size: 17px;
+        }
+
+        .dataset-banner p {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .source-badge {
+            padding: 9px 13px;
+            border-radius: 20px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .analytics-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .analytics-stat {
+            padding: 23px;
+            background: #fff;
+            border: 1px solid #e5eaf2;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(15, 23, 42, 0.035);
+        }
+
+        .stat-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 19px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .stat-icon {
+            display: flex;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #eff6ff;
+            font-size: 20px;
+        }
+
+        .stat-value {
+            display: block;
+            color: #17243b;
+            font-size: 28px;
+            font-weight: 750;
+            overflow-wrap: anywhere;
+        }
+
+        .stat-note {
+            margin-top: 8px;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .analytics-section {
+            margin-bottom: 24px;
+            padding: 25px;
+        }
+
+        .section-heading {
+            margin-bottom: 22px;
+        }
+
+        .section-heading h2 {
+            margin: 0 0 8px;
+            color: #17243b;
+            font-size: 20px;
+        }
+
+        .section-heading p {
+            margin: 0;
+            color: #718096;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .chart-panel {
+            min-width: 0;
+            padding: 22px;
+            border: 1px solid #e5eaf2;
+            border-radius: 15px;
+            background: #fff;
+        }
+
+        .chart-panel h3 {
+            margin: 0 0 8px;
+            color: #24334b;
+            font-size: 16px;
+        }
+
+        .chart-panel p {
+            margin: 0 0 20px;
+            color: #718096;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 290px;
+        }
+
+        .appliance-chart-container {
+            height: 330px;
+            margin-bottom: 25px;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .analytics-table th {
+            padding: 14px 16px;
+            color: #64748b;
+            background: #f8fafc;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .analytics-table td {
+            padding: 15px 16px;
+            border-bottom: 1px solid #edf0f5;
+            color: #334155;
+            font-size: 13px;
+        }
+
+        .analytics-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .analytics-message {
+            padding: 16px 18px;
+            margin-bottom: 22px;
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .analytics-message.error {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .analytics-message[hidden] {
+            display: none;
+        }
+
+        .analytics-footer {
+            padding: 16px 0 8px;
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .refresh-button {
+            cursor: pointer;
+        }
+
+        @media (max-width: 1000px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .analytics-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-section {
+                padding: 17px;
+            }
+
+            .chart-panel {
+                padding: 16px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
 </head>
 
 <body>
-
-<div class="app">
-
-    <!-- ================= SIDEBAR ================= -->
+<div class="app-layout">
 
     <aside class="sidebar">
 
-        <div class="logo">
-            <span class="logo-icon">⚡</span>
+        <div class="brand">
+            <span class="brand-icon">⚡</span>
             <span>EnergyFlow</span>
         </div>
 
-        <div class="sidebar-label">
-            ENERGY MANAGEMENT
-        </div>
-
-        <nav class="nav">
-
+        <nav class="sidebar-nav">
             <a href="/index.html">
-                <span>🏠</span>
+                <span class="nav-icon">▦</span>
                 Dashboard
             </a>
 
-            <a
-                href="/analytics.html"
-                class="active"
-            >
-                <span>📊</span>
+            <a href="/appliances.html">
+                <span class="nav-icon">⌂</span>
+                Appliances
+            </a>
+
+            <a href="/analytics.html" class="active">
+                <span class="nav-icon">▥</span>
                 Analytics
             </a>
 
-            <a href="/trends.html">
-                <span>📈</span>
-                Trends
-            </a>
-
             <a href="/alerts.html">
-                <span>🚨</span>
+                <span class="nav-icon">♧</span>
                 Alerts
             </a>
 
-            <a href="/energy-tips.html">
-                <span>💡</span>
-                Energy Tips
+            <a href="/recommendations.html">
+                <span class="nav-icon">✧</span>
+                Recommendations
             </a>
-
-            <a href="/reports.html">
-                <span>📄</span>
-                Reports
-            </a>
-
         </nav>
 
-
         <div class="sidebar-bottom">
-
-            <div class="cloud-mini">
-
-                <span class="online-dot"></span>
-
-                EnergyFlow System
-
-                <small id="sidebarStatus">
-                    Connecting...
-                </small>
-
-            </div>
-
+            <div class="small muted">Cloud Energy Monitoring</div>
 
             <button
-                id="logoutBtn"
-                class="logout"
+                class="btn btn-secondary btn-block"
+                id="logout-button"
+                type="button"
             >
-                ↪ Logout
+                Sign out
             </button>
-
         </div>
 
     </aside>
 
+    <main class="main-content">
 
-    <!-- ================= MAIN CONTENT ================= -->
-
-    <main class="main">
-
-        <!-- TOP BAR -->
-
-        <header class="topbar">
-
+        <header class="topbar analytics-intro">
             <div>
-
-                <div class="eyebrow">
-                    ENERGY INTELLIGENCE
-                </div>
-
-                <h1>
-                    Analytics
-                </h1>
-
-                <p class="page-subtitle">
-                    Understand how appliance-level consumption is distributed.
+                <h1>Energy Analytics</h1>
+                <p>
+                    Explore energy consumption patterns and household
+                    electricity usage.
                 </p>
-
             </div>
 
-
-            <span
-                id="cloudStatus"
-                class="status"
+            <button
+                id="refresh-button"
+                class="btn btn-primary refresh-button"
+                type="button"
             >
-                Checking system...
-            </span>
-
+                ↻ Refresh
+            </button>
         </header>
 
-
-        <!-- ================= APPLIANCE INTELLIGENCE ================= -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <h2>
-                        Appliance Intelligence
-                    </h2>
-
-                    <p>
-                        Detailed analysis of individual appliance consumption
-                    </p>
-
-                </div>
-
-                <span class="badge">
-                    LIVE ANALYSIS
-                </span>
-
+        <section class="dataset-banner">
+            <div>
+                <h2>⚡ UK-DALE · House 1</h2>
+                <p>
+                    Analytics are intended to use imported measurements
+                    from the UK-DALE research dataset. These are not
+                    measurements from your physical home.
+                </p>
             </div>
 
+            <span class="source-badge">Dataset-backed demo</span>
+        </section>
 
-            <!-- Appliance Selector -->
+        <div
+            id="analytics-error"
+            class="analytics-message"
+            role="status"
+            hidden
+        ></div>
 
-            <div class="appliance-selector">
+        <section class="analytics-stats">
 
-                <label for="applianceSelect">
-                    Select Appliance
-                </label>
+            <article class="analytics-stat">
+                <div class="stat-top">
+                    <span class="stat-label">Total readings</span>
+                    <span class="stat-icon">📊</span>
+                </div>
 
+                <strong
+                    class="stat-value"
+                    id="analytics-total-readings"
+                >—</strong>
 
-                <select id="applianceSelect">
+                <div class="stat-note">
+                    Measurements returned by the analytics API
+                </div>
+            </article>
 
-                    <option value="">
-                        Loading appliances...
-                    </option>
+            <article class="analytics-stat">
+                <div class="stat-top">
+                    <span class="stat-label">Recorded energy</span>
+                    <span class="stat-icon">⚡</span>
+                </div>
 
-                </select>
+                <strong
+                    class="stat-value"
+                    id="analytics-total-energy"
+                >—</strong>
 
+                <div class="stat-note">
+                    Calculated from recorded power observations
+                </div>
+            </article>
+
+            <article class="analytics-stat">
+                <div class="stat-top">
+                    <span class="stat-label">Estimated cost</span>
+                    <span class="stat-icon">₹</span>
+                </div>
+
+                <strong
+                    class="stat-value"
+                    id="analytics-total-cost"
+                >—</strong>
+
+                <div class="stat-note">
+                    Estimate based on the configured tariff
+                </div>
+            </article>
+
+        </section>
+
+        <section class="card analytics-section">
+
+            <div class="section-heading">
+                <h2>Consumption trends</h2>
+                <p>
+                    Review daily and monthly energy consumption based
+                    on available measurements.
+                </p>
             </div>
 
+            <div class="chart-grid">
 
-            <!-- Detailed Analysis -->
+                <article class="chart-panel">
+                    <h3>Daily consumption</h3>
+                    <p>Energy consumption grouped by day.</p>
 
-            <div
-                id="applianceAnalysis"
-                class="appliance-analysis"
-            >
+                    <div class="chart-container">
+                        <canvas id="daily-chart"></canvas>
+                    </div>
+                </article>
 
-                <div class="loading">
-                    Select an appliance to view detailed analysis.
-                </div>
+                <article class="chart-panel">
+                    <h3>Monthly consumption</h3>
+                    <p>Energy consumption grouped by month.</p>
+
+                    <div class="chart-container">
+                        <canvas id="monthly-chart"></canvas>
+                    </div>
+                </article>
 
             </div>
 
         </section>
 
+        <section class="card analytics-section">
 
-        <!-- ================= ENERGY BY APPLIANCE ================= -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <h2>
-                        Energy by Appliance
-                    </h2>
-
-                    <p>
-                        Relative contribution of each appliance
-                    </p>
-
-                </div>
-
-                <span class="badge">
-                    ANALYTICS
-                </span>
-
+            <div class="section-heading">
+                <h2>Appliance consumption</h2>
+                <p>
+                    Compare recorded energy consumption between
+                    individual appliances.
+                </p>
             </div>
 
-
-            <div id="analyticsBars">
-
-                <div class="loading">
-                    Loading...
-                </div>
-
+            <div class="appliance-chart-container chart-container">
+                <canvas id="appliance-chart"></canvas>
             </div>
 
-        </section>
+            <div class="table-wrap">
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Appliance</th>
+                            <th>Energy (kWh)</th>
+                            <th>Estimated cost</th>
+                        </tr>
+                    </thead>
 
-
-        <!-- ================= CONSUMPTION ANALYSIS ================= -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <h2>
-                        Consumption Analysis
-                    </h2>
-
-                    <p>
-                        Automated analysis of household energy usage
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div
-                id="analysisText"
-                class="insight-box"
-            >
-
-                <div class="loading">
-                    Loading...
-                </div>
-
+                    <tbody id="appliance-analytics-table">
+                        <tr>
+                            <td colspan="3">
+                                Loading appliance analytics...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
         </section>
 
-
-        <!-- ================= RAG KNOWLEDGE ================= -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <h2>
-                        RAG Knowledge Retrieval
-                    </h2>
-
-                    <p>
-                        Appliance-specific information retrieved from the
-                        EnergyFlow knowledge base
-                    </p>
-
-                </div>
-
-                <span class="badge">
-                    RAG ENABLED
-                </span>
-
-            </div>
-
-
-            <div id="ragText">
-
-                <div class="loading">
-                    Loading knowledge retrieval...
-                </div>
-
-            </div>
-
-        </section>
+        <footer class="analytics-footer">
+            Data source: UK-DALE public household electricity dataset.
+            Energy totals and cost estimates depend on the measurements
+            returned by the backend and the configured electricity tariff.
+        </footer>
 
     </main>
-
 </div>
 
+<script src="/js/api.js"></script>
+<script src="/js/analytics.js"></script>
 
-<!-- ================= JAVASCRIPT ================= -->
-
-<script src="/script.js"></script>
+<script>
+    document
+        .getElementById("logout-button")
+        .addEventListener("click", function () {
+            if (window.EnergyAPI) {
+                EnergyAPI.logout();
+            }
+        });
+</script>
 
 </body>
-
 </html>

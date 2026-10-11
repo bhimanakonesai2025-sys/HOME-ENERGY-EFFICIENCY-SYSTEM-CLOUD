@@ -2,568 +2,721 @@
 <html lang="en">
 
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta charset="UTF-8">
+  <title>Dashboard | EnergyFlow</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+  <link rel="stylesheet" href="/css/style.css">
 
-    <title>EnergyFlow | Dashboard</title>
+  <style>
+    .dataset-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 20px 22px;
+      margin-top: 20px;
+      border: 1px solid #dbeafe;
+      border-radius: 15px;
+      background: linear-gradient(120deg, #eff6ff, #f0fdfa);
+    }
 
-    <link
-        rel="stylesheet"
-        href="/style.css"
-    >
+    .dataset-banner-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: #dbeafe;
+      font-size: 22px;
+    }
 
+    .dataset-banner h2 {
+      margin: 0 0 7px;
+      font-size: 16px;
+      color: #16365c;
+    }
+
+    .dataset-banner p {
+      margin: 0;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .historical-section {
+      margin-top: 20px;
+    }
+
+    .historical-section .card {
+      min-width: 0;
+    }
+
+    .historical-section .stat-value {
+      overflow-wrap: anywhere;
+    }
+
+    .section-subtitle {
+      margin-top: 6px;
+      color: #718096;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 600px) {
+      .dataset-banner {
+        padding: 16px;
+      }
+    }
+  </style>
 </head>
-
 
 <body>
 
-<div class="app">
+  <div class="app-layout">
 
-
-    <!-- SIDEBAR -->
-
+    <!-- Sidebar -->
     <aside class="sidebar">
 
-        <div class="logo">
+      <div class="brand">
+        <span class="brand-icon">⚡</span>
+        <span>EnergyFlow</span>
+      </div>
 
-            <span class="logo-icon">⚡</span>
+      <nav class="sidebar-nav">
 
-            EnergyFlow
+        <a href="/index.html" class="active">
+          <span class="nav-icon">▦</span>
+          Dashboard
+        </a>
 
+        <a href="/appliances.html">
+          <span class="nav-icon">⌂</span>
+          Appliances
+        </a>
+
+        <a href="/analytics.html">
+          <span class="nav-icon">▥</span>
+          Analytics
+        </a>
+
+        <a href="/alerts.html">
+          <span class="nav-icon">♧</span>
+          Alerts
+        </a>
+
+        <a href="/recommendations.html">
+          <span class="nav-icon">✧</span>
+          Recommendations
+        </a>
+
+      </nav>
+
+      <div class="sidebar-bottom">
+
+        <div class="small muted">
+          Cloud Energy Monitoring
         </div>
 
+        <button
+          class="btn btn-secondary btn-block"
+          type="button"
+          onclick="EnergyAPI.logout()"
+        >
+          Sign out
+        </button>
 
-        <div class="sidebar-label">
-            ENERGY MANAGEMENT
-        </div>
-
-
-        <nav class="nav">
-
-            <a
-                href="/index.html"
-                class="active"
-            >
-                <span>🏠</span>
-                Dashboard
-            </a>
-
-            <a href="/analytics.html">
-                <span>📊</span>
-                Analytics
-            </a>
-
-            <a href="/trends.html">
-                <span>📈</span>
-                Trends
-            </a>
-
-            <a href="/alerts.html">
-                <span>🚨</span>
-                Alerts
-            </a>
-
-            <a href="/energy-tips.html">
-                <span>💡</span>
-                Energy Tips
-            </a>
-
-            <a href="/reports.html">
-                <span>📄</span>
-                Reports
-            </a>
-
-        </nav>
-
-
-        <div class="sidebar-bottom">
-
-            <div class="cloud-mini">
-
-                <span class="online-dot"></span>
-
-                EnergyFlow System
-
-                <small id="sidebarStatus">
-                    Storage: local
-                </small>
-
-            </div>
-
-
-            <button
-                id="logoutBtn"
-                class="logout"
-            >
-                ↪ Logout
-            </button>
-
-        </div>
+      </div>
 
     </aside>
 
+    <!-- Main Content -->
+    <main class="main-content">
 
+      <!-- Page Header -->
+      <header class="topbar">
 
-    <!-- MAIN -->
+        <div>
+          <h1>Energy Dashboard</h1>
 
-    <main class="main">
+          <p>
+            Monitor household electricity consumption and historical trends.
+          </p>
+        </div>
 
+        <div class="topbar-actions">
 
-        <header class="topbar">
+          <div class="user-chip">
+
+            <div class="user-avatar" id="user-initial">
+              U
+            </div>
 
             <div>
+              <strong id="user-name">User</strong>
 
-                <div class="eyebrow">
-                    HOME ENERGY MONITORING
-                </div>
-
-                <h1>
-                    Energy Dashboard
-                </h1>
-
-                <p class="page-subtitle">
-                    Monitor, analyze and understand your
-                    household energy consumption.
-                </p>
-
+              <div class="small muted" id="home-name">
+                My Home
+              </div>
             </div>
 
+          </div>
 
-            <span
-                id="cloudStatus"
-                class="status"
-            >
-                ● System Online
+        </div>
+
+      </header>
+
+      <!-- Error Message -->
+      <div
+        id="dashboard-error"
+        class="form-message error"
+        role="alert"
+        hidden
+      ></div>
+
+      <!-- Last Updated -->
+      <div
+        class="small muted"
+        id="last-updated"
+        style="margin-top: 12px;"
+      >
+        Loading dashboard...
+      </div>
+
+      <!-- Dataset Information -->
+      <section class="dataset-banner">
+
+        <div class="dataset-banner-icon">
+          ⚡
+        </div>
+
+        <div>
+
+          <h2 id="data-source">
+            UK-DALE · House 1
+          </h2>
+
+          <p id="data-source-description">
+            Loading dataset information...
+          </p>
+
+          <p style="margin-top: 6px;">
+            Historical measurements are used for this demonstration.
+            They are not live readings from your physical home.
+          </p>
+
+        </div>
+
+      </section>
+
+      <!-- Today's Statistics -->
+      <section
+        class="grid grid-4"
+        style="margin-top: 20px;"
+      >
+
+        <!-- Total Readings -->
+        <article class="card">
+
+          <div class="card-header">
+            <span class="stat-label">
+              Total Readings
             </span>
 
-        </header>
-        <div
-    id="referenceDataBanner"
-    class="reference-data-banner"
-    style="display: none;"
->
+            <span class="stat-icon blue">
+              ▤
+            </span>
+          </div>
 
-    <div class="reference-data-icon">
-        📊
-    </div>
+          <div class="stat-value" id="total-readings">
+            —
+          </div>
 
-    <div>
-        <strong>
-            REFERENCE DATASET — UK-DALE
-        </strong>
+          <div class="stat-foot">
+            Recorded measurements
+          </div>
 
-        <p>
-            Real measured appliance-level data used
-            for demonstration and analysis.
-        </p>
-    </div>
+        </article>
 
-</div>
+        <!-- Active Appliances -->
+        <article class="card">
 
+          <div class="card-header">
+            <span class="stat-label">
+              Active Appliances
+            </span>
 
-        <!-- =================================================
-             METRICS
-             ================================================= -->
+            <span class="stat-icon green">
+              ⌂
+            </span>
+          </div>
 
-        <section class="dashboard-grid">
+          <div class="stat-value" id="active-appliances">
+            —
+          </div>
 
+          <div class="stat-foot">
+            Registered devices
+          </div>
 
-            <div class="metric-card">
+        </article>
 
-                <span class="metric-icon">
-                    ⚡
-                </span>
+        <!-- Today's Energy -->
+        <article class="card">
 
-                <span class="metric-label">
-                    TOTAL ENERGY
-                </span>
+          <div class="card-header">
+            <span class="stat-label">
+              Today's Energy
+            </span>
 
-                <strong id="totalEnergy">
-                    0.000 kWh
-                </strong>
+            <span class="stat-icon orange">
+              ⚡
+            </span>
+          </div>
 
-                <small>
-                    Total analyzed consumption
-                </small>
+          <div class="stat-value" id="today-energy">
+            —
+          </div>
 
+          <div class="stat-foot">
+            Measurements recorded today
+          </div>
+
+        </article>
+
+        <!-- Today's Cost -->
+        <article class="card">
+
+          <div class="card-header">
+            <span class="stat-label">
+              Today's Estimated Cost
+            </span>
+
+            <span class="stat-icon green">
+              ₹
+            </span>
+          </div>
+
+          <div class="stat-value" id="today-cost">
+            —
+          </div>
+
+          <div class="stat-foot">
+            Based on the configured tariff
+          </div>
+
+        </article>
+
+      </section>
+
+      <!-- Historical Statistics -->
+      <section
+        class="grid grid-2 historical-section"
+      >
+
+        <!-- Total Historical Energy -->
+        <article class="card">
+
+          <div class="card-header">
+
+            <div>
+              <h2>Historical Energy</h2>
+
+              <p class="section-subtitle">
+                Energy accumulated across all imported readings.
+              </p>
             </div>
 
+            <span class="stat-icon blue">
+              ▥
+            </span>
 
+          </div>
 
-            <div class="metric-card">
+          <div
+            class="stat-value"
+            id="total-recorded-energy"
+          >
+            —
+          </div>
 
-                <span class="metric-icon">
-                    ₹
-                </span>
+          <div class="stat-foot">
+            Calculated from recorded UK-DALE measurements
+          </div>
 
-                <span class="metric-label">
-                    ESTIMATED COST
-                </span>
+        </article>
 
-                <strong id="estimatedCost">
-                    ₹0.00
-                </strong>
+        <!-- Historical Cost -->
+        <article class="card">
 
-                <small>
-                    Based on configured tariff
-                </small>
+          <div class="card-header">
 
+            <div>
+              <h2>Historical Estimated Cost</h2>
+
+              <p class="section-subtitle">
+                Estimated cost across all imported readings.
+              </p>
             </div>
 
+            <span class="stat-icon green">
+              ₹
+            </span>
 
+          </div>
 
-            <div class="metric-card">
+          <div
+            class="stat-value"
+            id="total-recorded-cost"
+          >
+            —
+          </div>
 
-                <span class="metric-icon">
-                    ◉
-                </span>
+          <div class="stat-foot">
+            Calculated using the configured electricity tariff
+          </div>
 
-                <span class="metric-label">
-                    APPLIANCES
-                </span>
+        </article>
 
-                <strong id="applianceCount">
-                    0
-                </strong>
+      </section>
 
-                <small>
-                    Devices analyzed
-                </small>
+      <!-- Additional Historical Statistics -->
+      <section
+        class="grid grid-2"
+        style="margin-top: 20px;"
+      >
 
-            </div>
+        <article class="card">
 
+          <div class="card-header">
+            <h2>Historical Measurements</h2>
+            <span class="stat-icon blue">▤</span>
+          </div>
 
+          <div
+            class="stat-value"
+            id="historical-reading-count"
+          >
+            —
+          </div>
 
-            <div class="metric-card">
+          <p class="muted">
+            Total measurements included in the dataset
+          </p>
 
-                <span class="metric-icon">
-                    ⌁
-                </span>
+        </article>
 
-                <span class="metric-label">
-                    READINGS
-                </span>
+        <article class="card">
 
-                <strong id="readingCount">
-                    0
-                </strong>
+          <div class="card-header">
+            <h2>Average Recorded Power</h2>
+            <span class="stat-icon orange">⚡</span>
+          </div>
 
-                <small>
-                    Real measured readings
-                </small>
+          <div
+            class="stat-value"
+            id="average-power"
+          >
+            —
+          </div>
 
-            </div>
+          <p class="muted">
+            Average power across all imported readings
+          </p>
 
-        </section>
+        </article>
 
+      </section>
 
+      <!-- Alerts and Background Jobs -->
+      <section
+        class="grid grid-2"
+        style="margin-top: 20px;"
+      >
 
-        <!-- =================================================
-             HIGHEST CONSUMER
-             ================================================= -->
+        <article class="card">
 
-        <section
-            class="panel"
-            id="highestConsumerCard"
-        >
+          <div class="card-header">
 
-            <div
-                class="highest-consumer"
-            >
+            <h2>Alert Overview</h2>
 
-                <div class="highest-icon">
-                    🏆
-                </div>
+            <a href="/alerts.html">
+              View alerts →
+            </a>
 
+          </div>
 
-                <div class="highest-content">
+          <div
+            class="stat-value"
+            id="unread-alerts"
+          >
+            —
+          </div>
 
-                    <span class="metric-label">
-                        HIGHEST ENERGY CONSUMER
-                    </span>
+          <p class="muted">
+            Unread energy alerts
+          </p>
 
-                    <h2 id="highestConsumer">
-                        Loading...
-                    </h2>
+        </article>
 
-                    <p>
-                        <span id="highestConsumerEnergy">
-                            Loading appliance consumption...
-                        </span>
-                    </p>
+        <article class="card">
 
-                </div>
+          <div class="card-header">
 
+            <h2>Background Processing</h2>
 
-                <div class="highest-percent">
+            <span class="stat-icon blue">
+              ⚙
+            </span>
 
-                    <strong id="highestContribution">
-                        0%
-                    </strong>
+          </div>
 
-                    <span>
-                        contribution
-                    </span>
+          <div
+            class="stat-value"
+            id="pending-jobs"
+          >
+            —
+          </div>
 
-                </div>
+          <p class="muted">
+            Jobs waiting to be processed
+          </p>
 
-            </div>
+        </article>
 
-        </section>
+      </section>
 
+      <!-- Recent Energy Readings -->
+      <section
+        class="card"
+        style="margin-top: 20px;"
+      >
 
+        <div class="card-header">
 
-        <!-- =================================================
-             ENERGY BY APPLIANCE
-             ================================================= -->
+          <div>
+            <h2>Recent Energy Readings</h2>
 
-        <section class="panel">
+            <p class="muted small">
+              Latest measurements recorded in the dataset.
+            </p>
+          </div>
 
-            <div class="panel-header">
+          <a href="/analytics.html">
+            Explore analytics →
+          </a>
 
-                <div>
+        </div>
 
-                    <h2>
-                        Energy by Appliance
-                    </h2>
+        <div class="table-wrap">
 
-                    <p>
-                        Share of analyzed household consumption
-                    </p>
+          <table>
 
-                </div>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Appliance ID</th>
+                <th>Power</th>
+                <th>Energy</th>
+              </tr>
+            </thead>
 
+            <tbody id="recent-readings">
 
-                <a
-                    href="/analytics.html"
-                    class="panel-link"
-                >
-                    View analytics →
-                </a>
+              <tr>
+                <td colspan="4" class="loading">
+                  Loading readings...
+                </td>
+              </tr>
 
-            </div>
+            </tbody>
 
+          </table>
 
-            <div id="energyByAppliance">
+        </div>
 
-                <div class="loading">
-                    Loading energy data...
-                </div>
+      </section>
 
-            </div>
+      <!-- Appliance Consumption -->
+      <section
+        class="card"
+        style="margin-top: 20px;"
+      >
 
-        </section>
+        <div class="card-header">
 
+          <div>
+            <h2>Appliance Consumption</h2>
 
+            <p class="muted small">
+              Compare energy consumption across appliances.
+            </p>
+          </div>
 
-        <!-- =================================================
-             SMART INSIGHT
-             ================================================= -->
+          <a href="/analytics.html">
+            Full analytics →
+          </a>
 
-        <section class="panel">
+        </div>
 
-            <div class="panel-header">
+        <div class="table-wrap">
 
-                <div>
+          <table>
 
-                    <h2>
-                        Smart Insight
-                    </h2>
+            <thead>
+              <tr>
+                <th>Appliance</th>
+                <th>Measurements</th>
+                <th>Average Power</th>
+                <th>Total Energy</th>
+                <th>Estimated Cost</th>
+              </tr>
+            </thead>
 
-                    <p>
-                        EnergyFlow analysis
-                    </p>
+            <tbody id="appliance-consumption">
 
-                </div>
+              <tr>
+                <td colspan="5" class="loading">
+                  Loading appliance consumption...
+                </td>
+              </tr>
 
+            </tbody>
 
-                <span class="badge">
-                    ANALYZED
-                </span>
+          </table>
 
-            </div>
+        </div>
 
-
-            <div
-                id="smartInsight"
-                class="insight-box"
-            >
-
-                <div class="loading">
-                    Analyzing...
-                </div>
-
-            </div>
-
-        </section>
-
-
-
-        <!-- =================================================
-             EXPLORE
-             ================================================= -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <h2>
-                        Explore EnergyFlow
-                    </h2>
-
-                    <p>
-                        Tools to understand your energy consumption
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="quick-actions">
-
-
-                <a
-                    href="/trends.html"
-                    class="quick-action"
-                >
-
-                    <span>
-                        📈
-                    </span>
-
-                    <strong>
-                        Consumption Trends
-                    </strong>
-
-                    <small>
-                        Explore readings over time
-                    </small>
-
-                </a>
-
-
-
-                <a
-                    href="/alerts.html"
-                    class="quick-action"
-                >
-
-                    <span>
-                        🚨
-                    </span>
-
-                    <strong>
-                        Energy Alerts
-                    </strong>
-
-                    <small>
-                        Identify high-usage appliances
-                    </small>
-
-                </a>
-
-
-
-                <a
-                    href="/energy-tips.html"
-                    class="quick-action"
-                >
-
-                    <span>
-                        💡
-                    </span>
-
-                    <strong>
-                        Smart Tips
-                    </strong>
-
-                    <small>
-                        Get appliance-specific advice
-                    </small>
-
-                </a>
-
-
-
-                <a
-                    href="/reports.html"
-                    class="quick-action"
-                >
-
-                    <span>
-                        📄
-                    </span>
-
-                    <strong>
-                        Reports
-                    </strong>
-
-                    <small>
-                        View analyzed energy data
-                    </small>
-
-                </a>
-
-            </div>
-
-        </section>
-
-
-
-        <!-- =================================================
-             RECENT READINGS
-             ================================================= -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <h2>
-                        Recent Energy Readings
-                    </h2>
-
-                    <p>
-                        Latest appliance-level measurements
-                    </p>
-
-                </div>
-
-
-                <span class="badge">
-                    LIVE DATA
-                </span>
-
-            </div>
-
-
-            <div id="recentReadings">
-
-                <div class="loading">
-                    Loading readings...
-                </div>
-
-            </div>
-
-        </section>
-
+      </section>
 
     </main>
 
-</div>
+  </div>
 
+  <!-- Application Scripts -->
+  <script src="/js/api.js"></script>
+  <script src="/js/dashboard.js"></script>
 
-<script src="/script.js"></script>
+  <!-- Appliance Consumption Table -->
+  <script>
+    (function () {
+      "use strict";
+
+      const body = document.getElementById(
+        "appliance-consumption"
+      );
+
+      function number(value, digits = 4) {
+        const parsed = Number(value);
+
+        if (!Number.isFinite(parsed)) {
+          return "0";
+        }
+
+        return parsed.toLocaleString("en-IN", {
+          maximumFractionDigits: digits
+        });
+      }
+
+      function energy(value) {
+        const amount = Number(value);
+
+        if (!Number.isFinite(amount) || amount <= 0) {
+          return "0 kWh";
+        }
+
+        if (amount < 0.0001) {
+          return amount.toFixed(8) + " kWh";
+        }
+
+        if (amount < 0.01) {
+          return amount.toFixed(6) + " kWh";
+        }
+
+        return number(amount) + " kWh";
+      }
+
+      function cell(value) {
+        const td = document.createElement("td");
+        td.textContent = value;
+        return td;
+      }
+
+      async function loadApplianceConsumption() {
+        body.replaceChildren();
+
+        try {
+          const response = await EnergyAPI.get(
+            "/api/dashboard"
+          );
+
+          const appliances = Array.isArray(
+            response.applianceConsumption
+          )
+            ? response.applianceConsumption
+            : [];
+
+          if (appliances.length === 0) {
+            const row = document.createElement("tr");
+            const td = cell(
+              "No appliance consumption measurements are available."
+            );
+
+            td.colSpan = 5;
+            row.appendChild(td);
+            body.appendChild(row);
+
+            return;
+          }
+
+          for (const appliance of appliances) {
+            const row = document.createElement("tr");
+
+            row.append(
+              cell(
+                appliance.name ||
+                appliance.applianceId ||
+                "Unknown appliance"
+              ),
+
+              cell(
+                number(appliance.readingCount, 0)
+              ),
+
+              cell(
+                number(appliance.averagePowerWatts, 2) +
+                " W"
+              ),
+
+              cell(
+                energy(appliance.totalEnergyKwh)
+              ),
+
+              cell(
+                "₹" + number(appliance.estimatedCost, 2)
+              )
+            );
+
+            body.appendChild(row);
+          }
+        } catch (error) {
+          const row = document.createElement("tr");
+          const td = cell(
+            error.message ||
+            "Unable to load appliance consumption."
+          );
+
+          td.colSpan = 5;
+          row.appendChild(td);
+          body.appendChild(row);
+        }
+      }
+
+      loadApplianceConsumption();
+    })();
+  </script>
 
 </body>
-
 </html>

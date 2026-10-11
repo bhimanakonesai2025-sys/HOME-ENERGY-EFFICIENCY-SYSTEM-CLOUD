@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "6a85db0d4a4dc05a04b9825f",
+    "name": "My Home",
+    "userId": "6a85db0d4a4dc05a04b9825e",
+    "createdAt": "2026-08-19T16:34:21.461Z",
+    "updatedAt": "2026-08-19T16:34:21.461Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a85e9976585d9fdd1d11c7f",
+    "name": "My Home",
+    "userId": "6a85e9976585d9fdd1d11c7e",
+    "createdAt": "2026-08-19T17:36:23.446Z",
+    "updatedAt": "2026-08-19T17:36:23.446Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a85f5dbe3ee900ed9d44018",
+    "name": "My Home",
+    "userId": "6a85f5dbe3ee900ed9d44017",
+    "createdAt": "2026-08-19T18:28:43.983Z",
+    "updatedAt": "2026-08-19T18:28:43.983Z",
+    "__v": 0
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "_id": "6a85db0d4a4dc05a04b9825e",
+    "name": "Demo User",
+    "email": "demo@energyflow.com",
+    "password": "$2b$10$WyuRwFGxaYB.aitPs0732.0amjxZ/hkKlCrbv3jBIvbVcGod8yxC2",
+    "createdAt": "2026-08-19T16:34:21.135Z",
+    "updatedAt": "2026-08-19T17:00:34.173Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a85e9976585d9fdd1d11c7e",
+    "name": "Sai Harshini",
+    "email": "bhimanakonesaiharshini@gmail.com",
+    "password": "$2b$10$HabaVM/S8I.PNXQZQehogOgyB.Q5hZeBYYxdl00SZSQmh81VPdFuq",
+    "createdAt": "2026-08-19T17:36:23.274Z",
+    "updatedAt": "2026-08-19T17:36:23.274Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a85f5dbe3ee900ed9d44017",
+    "name": "SAIHARSHINI BHIMANAKONE",
+    "email": "bhimanakone.sai2025@vitstudent.ac.in",
+    "password": "$2b$10$6KTzoju7Q5LsHVoYuSKSHu6/hu54p7xzjwEQffcy10RYghL6PBtIm",
+    "createdAt": "2026-08-19T18:28:43.843Z",
+    "updatedAt": "2026-08-19T18:28:43.843Z",
+    "__v": 0
+  }
+]

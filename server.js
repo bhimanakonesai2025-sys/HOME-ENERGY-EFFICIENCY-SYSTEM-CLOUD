@@ -1,19 +1,54 @@
-require("dotenv").config();
+"use strict";
 
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+
+const { config, validateConfig } = require("./config/env");
+
+const {
+    connectDatabase,
+    pingDatabase,
+    closeDatabase
+} = require("./database/mongodb");
 
 const authRoutes = require("./routes/auth");
-const energyRoutes = require("./routes/energy");
+const dashboardRoutes = require("./routes/dashboard");
 const applianceRoutes = require("./routes/appliances");
+const energyRoutes = require("./routes/energy");
+const alertRoutes = require("./routes/alerts");
+const recommendationRoutes = require("./routes/recommendations");
+const analyticsRoutes = require("./routes/analytics");
+const healthRoutes = require("./routes/health");
+
+const notFound = require("./middleware/notFound");
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
-const PORT =
-    Number(process.env.PORT || 5000);
+app.disable("x-powered-by");
 
-app.use(cors());
+/* =========================
+   SECURITY MIDDLEWARE
+========================= */
+
+app.use(
+    helmet({
+        contentSecurityPolicy: false
+    })
+);
+
+app.use(
+    cors({
+        origin: process.env.CORS_ORIGIN
+            ? process.env.CORS_ORIGIN
+                  .split(",")
+                  .map(value => value.trim())
+            : true
+    })
+);
 
 app.use(
     express.json({
@@ -23,159 +58,156 @@ app.use(
 
 app.use(
     express.urlencoded({
-        extended: true
+        extended: false,
+        limit: "1mb"
     })
 );
 
-/* =========================
-   HEALTH CHECK
-========================= */
-
-app.get(
-    "/api/health",
-    (req, res) => {
-        res.json({
-            status: "ok",
-            application: "EnergyFlow",
-
-            deploymentMode:
-                process.env.NODE_ENV ||
-                "development",
-
-            storageMode:
-                process.env.STORAGE_MODE ||
-                "local",
-
-            timestamp:
-                new Date().toISOString()
-        });
-    }
-);
-
-/* =========================
-   API ROUTES
-========================= */
-
 app.use(
-    "/api/auth",
-    authRoutes
-);
-
-app.use(
-    "/api/energy",
-    energyRoutes
-);
-
-app.use(
-    "/api/appliances",
-    applianceRoutes
+    rateLimit({
+        windowMs: config.apiRateLimitWindowMs,
+        limit: config.apiRateLimitMaxRequests,
+        standardHeaders: "draft-8",
+        legacyHeaders: false,
+        message: {
+            success: false,
+            message: "Too many requests. Please try again later."
+        }
+    })
 );
 
 /* =========================
    FRONTEND
 ========================= */
 
-app.use(
-    express.static(
-        path.join(
-            __dirname,
-            "public"
-        )
-    )
-);
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+    res.sendFile(
+        path.join(__dirname, "public", "login.html")
+    );
+});
 
 /* =========================
-   UNKNOWN ROUTES
+   API ROUTES
 ========================= */
 
-app.use(
-    (req, res) => {
-        if (
-            req.path.startsWith(
-                "/api/"
-            )
-        ) {
-            return res.status(404).json({
-                message:
-                    "API endpoint not found."
-            });
-        }
+app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/appliances", applianceRoutes);
+app.use("/api/energy", energyRoutes);
+app.use("/api/alerts", alertRoutes);
+app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/health", healthRoutes);
 
-        res.sendFile(
-            path.join(
-                __dirname,
-                "public",
-                "login.html"
-            )
+/* =========================
+   API NOT FOUND
+========================= */
+
+app.use("/api", (req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "API endpoint not found."
+    });
+});
+
+/* =========================
+   ERROR HANDLING
+========================= */
+
+app.use(notFound);
+app.use(errorHandler);
+
+/* =========================
+   SERVER LIFECYCLE
+========================= */
+
+let server;
+let shuttingDown = false;
+
+async function startServer() {
+    validateConfig();
+
+    // Establish the database connection before accepting requests.
+    await connectDatabase();
+
+    server = app.listen(config.port, () => {
+        console.log(
+            `${config.appName} server listening on port ${config.port}`
         );
+
+        console.log(`Environment: ${config.nodeEnv}`);
+    });
+
+    server.on("error", error => {
+        console.error("HTTP server error:", error);
+        process.exitCode = 1;
+    });
+
+    return server;
+}
+
+async function shutdown(signal) {
+    if (shuttingDown) {
+        return;
     }
-);
 
-/* =========================
-   ERROR HANDLER
-========================= */
+    shuttingDown = true;
 
-app.use(
-    (
-        err,
-        req,
-        res,
-        next
-    ) => {
-        console.error(
-            "Unhandled error:",
-            err
-        );
+    console.log(
+        `${signal} received. Shutting down EnergyFlow...`
+    );
 
-        res.status(500).json({
-            message:
-                "Internal server error",
-
-            error:
-                process.env.NODE_ENV ===
-                "production"
-                    ? undefined
-                    : err.message
+    if (server) {
+        await new Promise((resolve, reject) => {
+            server.close(error => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        }).catch(error => {
+            console.error("Error closing HTTP server:", error);
+            process.exitCode = 1;
         });
     }
-);
+
+    try {
+        await closeDatabase();
+        console.log("MongoDB connection closed.");
+    } catch (error) {
+        console.error("Error closing MongoDB:", error);
+        process.exitCode = 1;
+    }
+}
+
+process.on("SIGINT", () => {
+    shutdown("SIGINT").finally(() => process.exit());
+});
+
+process.on("SIGTERM", () => {
+    shutdown("SIGTERM").finally(() => process.exit());
+});
 
 /* =========================
-   START SERVER
+   START APPLICATION
 ========================= */
 
-app.listen(
-    PORT,
-    () => {
-        console.log(
-            "=========================================="
+if (require.main === module) {
+    startServer().catch(error => {
+        console.error(
+            "Unable to start EnergyFlow:",
+            error
         );
 
-        console.log(
-            " EnergyFlow - Cloud Energy Monitor"
-        );
+        process.exit(1);
+    });
+}
 
-        console.log(
-            "=========================================="
-        );
-
-        console.log(
-            `Server: http://localhost:${PORT}`
-        );
-
-        console.log(
-            `Storage: ${
-                process.env.STORAGE_MODE ||
-                "local"
-            }`
-        );
-
-        console.log(
-            "Health:  /api/health"
-        );
-
-        console.log(
-            "=========================================="
-        );
-    }
-);
+module.exports = {
+    app,
+    startServer,
+    shutdown
+};

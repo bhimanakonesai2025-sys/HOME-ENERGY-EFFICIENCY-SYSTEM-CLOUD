@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendations | EnergyFlow</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .page-heading { margin-bottom: 26px; }
+        .page-heading h1 { margin-bottom: 8px; }
+        .page-heading p { color: #718096; line-height: 1.6; }
+
+        .source-banner {
+            padding: 21px 24px;
+            margin-bottom: 25px;
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            background: linear-gradient(120deg, #eff6ff, #f0fdfa);
+        }
+
+        .source-banner h2 {
+            margin: 0 0 8px;
+            color: #16365c;
+            font-size: 17px;
+        }
+
+        .source-banner p {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            padding: 22px;
+            border: 1px solid #e5eaf2;
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .summary-label {
+            color: #718096;
+            font-size: 13px;
+            margin-bottom: 13px;
+        }
+
+        .summary-value {
+            color: #17243b;
+            font-size: 28px;
+            font-weight: 750;
+        }
+
+        .summary-note {
+            margin-top: 8px;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .recommendations-section {
+            padding: 25px;
+            margin-bottom: 24px;
+        }
+
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .section-heading h2 {
+            margin: 0 0 7px;
+            font-size: 20px;
+        }
+
+        .section-heading p {
+            margin: 0;
+            color: #718096;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .recommendation-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .recommendation-card {
+            padding: 22px;
+            border: 1px solid #e5eaf2;
+            border-radius: 15px;
+            background: #fff;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, .06);
+        }
+
+        .recommendation-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .recommendation-icon {
+            display: flex;
+            width: 46px;
+            height: 46px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            background: #eff6ff;
+            font-size: 23px;
+            flex-shrink: 0;
+        }
+
+        .priority {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .priority-high {
+            color: #b91c1c;
+            background: #fee2e2;
+        }
+
+        .priority-medium {
+            color: #92400e;
+            background: #fef3c7;
+        }
+
+        .priority-low {
+            color: #166534;
+            background: #dcfce7;
+        }
+
+        .recommendation-card h3 {
+            margin: 0 0 7px;
+            color: #17243b;
+            font-size: 17px;
+        }
+
+        .recommendation-category {
+            margin-bottom: 14px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .recommendation-description {
+            color: #475569;
+            font-size: 13px;
+            line-height: 1.8;
+            overflow-wrap: anywhere;
+        }
+
+        .recommendation-footer {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid #edf0f5;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .state-box {
+            padding: 38px 20px;
+            text-align: center;
+            color: #64748b;
+            line-height: 1.7;
+        }
+
+        .state-box h3 {
+            margin: 0 0 8px;
+            color: #1e293b;
+        }
+
+        .error-box {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            background: #fef2f2;
+            color: #b91c1c;
+            font-size: 13px;
+        }
+
+        [hidden] { display: none !important; }
+
+        @media (max-width: 900px) {
+            .recommendation-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 700px) {
+            .summary-grid { grid-template-columns: 1fr; }
+            .recommendations-section { padding: 16px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-icon">⚡</span>
+            <span>EnergyFlow</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/index.html"><span class="nav-icon">▦</span> Dashboard</a>
+            <a href="/appliances.html"><span class="nav-icon">⌂</span> Appliances</a>
+            <a href="/analytics.html"><span class="nav-icon">▥</span> Analytics</a>
+            <a href="/alerts.html"><span class="nav-icon">♧</span> Alerts</a>
+            <a href="/recommendations.html" class="active"><span class="nav-icon">✧</span> Recommendations</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="small muted">Cloud Energy Monitoring</div>
+            <button class="btn btn-secondary btn-block" id="logout-button" type="button">
+                Sign out
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar page-heading">
+            <div>
+                <h1>Energy-Saving Recommendations</h1>
+                <p>Explore practical suggestions for improving household energy efficiency.</p>
+            </div>
+
+            <button class="btn btn-primary" id="refresh-button" type="button">
+                ↻ Refresh
+            </button>
+        </header>
+
+        <section class="source-banner">
+            <h2>✧ Insights from UK-DALE House 1</h2>
+            <p>
+                Recommendations should be generated from available appliance
+                information and measured usage. Potential savings are not
+                guaranteed and will only be displayed when supported by the
+                backend's calculations.
+            </p>
+        </section>
+
+        <div id="recommendations-error" class="error-box" role="alert" hidden></div>
+
+        <section class="summary-grid">
+            <article class="summary-card">
+                <div class="summary-label">Recommendations</div>
+                <div class="summary-value" id="recommendation-count">—</div>
+                <div class="summary-note">Items returned by the recommendation service</div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-label">High priority</div>
+                <div class="summary-value" id="high-priority-count">—</div>
+                <div class="summary-note">Recommendations marked high priority</div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-label">Appliances covered</div>
+                <div class="summary-value" id="covered-appliances">—</div>
+                <div class="summary-note">Distinct appliances referenced</div>
+            </article>
+        </section>
+
+        <section class="card recommendations-section">
+            <div class="section-heading">
+                <div>
+                    <h2>Recommended actions</h2>
+                    <p>Practical guidance associated with your available dataset.</p>
+                </div>
+            </div>
+
+            <div id="recommendations-grid" class="recommendation-grid" hidden></div>
+
+            <div id="recommendations-empty" class="state-box">
+                <h3>Loading recommendations...</h3>
+                <p>Retrieving recommendations from EnergyFlow.</p>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/recommendations.js"></script>
+<script>
+    document.getElementById("logout-button").addEventListener("click", () => {
+        EnergyAPI.logout();
+    });
+</script>
+</body>
+</html>

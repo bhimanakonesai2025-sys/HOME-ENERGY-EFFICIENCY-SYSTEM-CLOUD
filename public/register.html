@@ -1,123 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta charset="UTF-8">
+  <title>Create Account | EnergyFlow</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>EnergyFlow Register</title>
-
-    <link
-        rel="stylesheet"
-        href="/style.css"
-    >
-
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 
+<body>
+  <main class="auth-page">
 
-<body class="auth-page">
+    <section class="auth-visual">
+      <div class="brand">
+        <span class="brand-icon">⚡</span>
+        <span>EnergyFlow</span>
+      </div>
 
+      <div>
+        <h1>Make every unit of electricity count.</h1>
 
-    <div class="auth-card">
+        <p>
+          Create your account to organize household appliances,
+          understand consumption patterns and receive useful
+          energy-efficiency recommendations.
+        </p>
+      </div>
 
-        <div class="brand">
-            ⚡ EnergyFlow
-        </div>
+      <div class="auth-visual-footer">
+        Smarter monitoring. Better energy awareness.
+      </div>
+    </section>
 
+    <section class="auth-content">
+      <div class="auth-card">
 
-        <p class="subtitle">
-            Create your cloud energy-monitoring
-            account.
+        <h2>Create your account</h2>
+
+        <p class="auth-subtitle">
+          Get started with your personal energy dashboard.
         </p>
 
+        <div
+          id="form-message"
+          class="form-message"
+          role="alert"
+          hidden
+        ></div>
 
-        <form id="registerForm">
+        <form data-auth-form="register">
 
+          <div class="form-group">
+            <label for="name">Full name</label>
 
-            <div class="field">
-
-                <label for="name">
-                    Name
-                </label>
-
-                <input
-                    id="name"
-                    type="text"
-                    placeholder="Enter your name"
-                    required
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label for="email">
-                    Email
-                </label>
-
-                <input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    required
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label for="password">
-                    Password
-                </label>
-
-                <input
-                    id="password"
-                    type="password"
-                    minlength="6"
-                    placeholder="Minimum 6 characters"
-                    required
-                >
-
-            </div>
-
-
-            <button
-                class="primary"
-                type="submit"
+            <input
+              id="name"
+              name="name"
+              type="text"
+              placeholder="Your name"
+              autocomplete="name"
+              minlength="2"
+              maxlength="80"
+              required
             >
-                Register
-            </button>
+          </div>
 
+          <div class="form-group">
+            <label for="email">Email address</label>
 
-            <div
-                id="message"
-                class="message"
-            ></div>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            >
+          </div>
 
+          <div class="form-group">
+            <label for="password">Password</label>
+
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="At least 8 characters"
+              autocomplete="new-password"
+              minlength="8"
+              maxlength="72"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword">Confirm password</label>
+
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="Re-enter your password"
+              autocomplete="new-password"
+              minlength="8"
+              maxlength="72"
+              required
+            >
+          </div>
+
+          <button class="btn btn-primary btn-block" type="submit">
+            Create account
+          </button>
 
         </form>
 
+        <p class="auth-switch">
+          Already have an account?
+          <a href="/login.html">Sign in</a>
+        </p>
 
-        <a
-            class="link"
-            href="/login.html"
-        >
-            Already have an account? Login
-        </a>
+      </div>
+    </section>
 
+  </main>
 
-    </div>
-
-
-    <script src="/register.js"></script>
-
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
 </body>
-
 </html>

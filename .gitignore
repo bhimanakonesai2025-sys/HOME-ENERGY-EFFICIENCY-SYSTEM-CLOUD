@@ -1,28 +1,30 @@
+# Environment secrets
+.env
+.env.*
+!.env.example
+
 # Dependencies
 node_modules/
 
-# Environment variables
-.env
-
-# Local database/testing data
-data/local-db.json
-
 # Logs
+logs/
 *.log
 npm-debug.log*
 
-# OS files
+# Operating system
 .DS_Store
 Thumbs.db
 
-# IDE
+# Editors
 .vscode/
 .idea/
 
-# Large dataset files
-data/ukdale/**/*.dat
-data/ukdale/**/*.csv
-
 # Temporary files
-*.tmp
-*.temp
+tmp/
+temp/
+
+# Test output
+coverage/
+
+# Dataset files
+data/ukdale/

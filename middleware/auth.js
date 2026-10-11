@@ -1,73 +1,82 @@
 const jwt = require("jsonwebtoken");
 
-function getToken(req) {
-    const header =
-        req.headers.authorization || "";
+const { config } = require("../config/env");
 
-    if (header.startsWith("Bearer ")) {
-        return header.substring(7);
+function createToken(user) {
+  return jwt.sign(
+    {
+      userId: user.userId,
+      email: user.email
+    },
+    config.jwtSecret,
+    {
+      expiresIn: config.jwtExpiresIn
     }
-
-    return null;
+  );
 }
 
 function requireAuth(req, res, next) {
-    const token = getToken(req);
+  const authorization = req.headers.authorization;
 
-    if (!token) {
-        return res.status(401).json({
-            message:
-                "Authentication token required."
-        });
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      error: "Authentication token is required."
+    });
+  }
+
+  const token = authorization.slice(7).trim();
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: "Authentication token is missing."
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, config.jwtSecret);
+
+    if (!decoded.userId || !decoded.email) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid authentication token."
+      });
     }
 
-    try {
-        const payload =
-            jwt.verify(
-                token,
-                process.env.JWT_SECRET
-            );
-
-        req.user = payload;
-
-        next();
-    } catch (error) {
-        return res.status(401).json({
-            message:
-                "Invalid or expired token."
-        });
-    }
-}
-
-function requireIngestionKey(
-    req,
-    res,
-    next
-) {
-    const key =
-        req.headers["x-ingest-key"];
-
-    if (!process.env.INGEST_API_KEY) {
-        return res.status(500).json({
-            message:
-                "INGEST_API_KEY is not configured."
-        });
-    }
-
-    if (
-        !key ||
-        key !== process.env.INGEST_API_KEY
-    ) {
-        return res.status(401).json({
-            message:
-                "Invalid ingestion key."
-        });
-    }
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email
+    };
 
     next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      error: "Invalid or expired authentication token."
+    });
+  }
+}
+
+function requireIngestionKey(req, res, next) {
+  const providedKey = req.headers["x-ingestion-key"];
+
+  if (
+    !providedKey ||
+    !config.ingestionApiKey ||
+    providedKey !== config.ingestionApiKey
+  ) {
+    return res.status(401).json({
+      success: false,
+      error: "Invalid ingestion API key."
+    });
+  }
+
+  next();
 }
 
 module.exports = {
-    requireAuth,
-    requireIngestionKey
+  createToken,
+  requireAuth,
+  requireIngestionKey
 };

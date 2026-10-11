@@ -1,0 +1,95 @@
+[
+  {
+    "_id": "6a84a6aeba9a71588633401d",
+    "name": "AC",
+    "power": 1500,
+    "hoursUsed": 4,
+    "energyConsumed": 6,
+    "date": "2026-08-18T18:38:38.041Z",
+    "createdAt": "2026-08-18T18:38:38.044Z",
+    "updatedAt": "2026-08-19T16:38:30.886Z",
+    "__v": 0,
+    "homeId": "6a85db0d4a4dc05a04b9825f"
+  },
+  {
+    "_id": "6a84a93f458da90bfe91d431",
+    "name": "Fan",
+    "power": 75,
+    "hoursUsed": 8,
+    "energyConsumed": 0.6,
+    "date": "2026-08-18T18:49:35.040Z",
+    "createdAt": "2026-08-18T18:49:35.048Z",
+    "updatedAt": "2026-08-19T16:38:30.886Z",
+    "__v": 0,
+    "homeId": "6a85db0d4a4dc05a04b9825f"
+  },
+  {
+    "_id": "6a84a97d458da90bfe91d432",
+    "name": "Refrigerator",
+    "power": 200,
+    "hoursUsed": 10,
+    "energyConsumed": 2,
+    "date": "2026-08-18T18:50:37.150Z",
+    "createdAt": "2026-08-18T18:50:37.150Z",
+    "updatedAt": "2026-08-19T16:38:30.886Z",
+    "__v": 0,
+    "homeId": "6a85db0d4a4dc05a04b9825f"
+  },
+  {
+    "_id": "6a84a98e458da90bfe91d433",
+    "name": "TV",
+    "power": 120,
+    "hoursUsed": 5,
+    "energyConsumed": 0.6,
+    "date": "2026-08-18T18:50:54.713Z",
+    "createdAt": "2026-08-18T18:50:54.714Z",
+    "updatedAt": "2026-08-19T16:38:30.886Z",
+    "__v": 0,
+    "homeId": "6a85db0d4a4dc05a04b9825f"
+  },
+  {
+    "_id": "6a84a9a1458da90bfe91d434",
+    "name": "Washing Machine",
+    "power": 500,
+    "hoursUsed": 2,
+    "energyConsumed": 1,
+    "date": "2026-08-18T18:51:13.875Z",
+    "createdAt": "2026-08-18T18:51:13.876Z",
+    "updatedAt": "2026-08-19T16:38:30.886Z",
+    "__v": 0,
+    "homeId": "6a85db0d4a4dc05a04b9825f"
+  },
+  {
+    "_id": "6a85e9ea6585d9fdd1d11c80",
+    "name": "Fan",
+    "power": 50,
+    "hoursUsed": 2,
+    "energyConsumed": 0.1,
+    "homeId": "6a85e9976585d9fdd1d11c7f",
+    "createdAt": "2026-08-19T17:37:46.776Z",
+    "updatedAt": "2026-08-19T17:37:46.776Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a85f621e3ee900ed9d44019",
+    "name": "Refrigerator",
+    "power": 150,
+    "hoursUsed": 10,
+    "energyConsumed": 1.5,
+    "homeId": "6a85f5dbe3ee900ed9d44018",
+    "createdAt": "2026-08-19T18:29:53.397Z",
+    "updatedAt": "2026-08-19T18:29:53.397Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a899818e31b8c3f4a7855b4",
+    "name": "Washing Machine",
+    "power": 75,
+    "hoursUsed": 12,
+    "energyConsumed": 0.9,
+    "homeId": "6a85db0d4a4dc05a04b9825f",
+    "createdAt": "2026-08-22T12:37:44.333Z",
+    "updatedAt": "2026-08-22T12:37:44.333Z",
+    "__v": 0
+  }
+]

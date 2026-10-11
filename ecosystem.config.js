@@ -1,44 +1,28 @@
 module.exports = {
-
     apps: [
-
         {
-            name:
-                "energyflow",
-
-            script:
-                "server.js",
-
-            /*
-             * Run one worker per
-             * available CPU core.
-             *
-             * This is used when the
-             * application is deployed
-             * on the cloud VM.
-             */
-
-            instances:
-                "max",
-
-            exec_mode:
-                "cluster",
-
-            autorestart:
-                true,
-
-            watch:
-                false,
-
-            max_memory_restart:
-                "300M",
-
+            name: "energyflow-web",
+            script: "./server.js",
+            instances: 1,
+            exec_mode: "fork",
+            autorestart: true,
+            watch: false,
+            max_memory_restart: "500M",
             env: {
-                NODE_ENV:
-                    "production"
+                NODE_ENV: "production"
+            }
+        },
+        {
+            name: "energyflow-worker",
+            script: "./services/worker.js",
+            instances: 1,
+            exec_mode: "fork",
+            autorestart: true,
+            watch: false,
+            max_memory_restart: "500M",
+            env: {
+                NODE_ENV: "production"
             }
         }
-
     ]
-
 };
