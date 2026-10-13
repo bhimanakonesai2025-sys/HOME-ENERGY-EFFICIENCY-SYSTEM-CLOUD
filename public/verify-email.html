@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email | EnergyFlow</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 460px;
+            padding: 36px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 35px rgba(15, 23, 42, 0.1);
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 25px;
+            margin-bottom: 12px;
+        }
+
+        p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        #status {
+            margin: 22px 0;
+            padding: 14px;
+            border-radius: 8px;
+            background: #f1f5f9;
+        }
+
+        #status.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        #status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 12px 22px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        a:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="card">
+        <div class="logo">EnergyFlow</div>
+
+        <h1>Email Verification</h1>
+
+        <p>We're checking your verification link.</p>
+
+        <div id="status" role="status" aria-live="polite">
+            Verifying your email...
+        </div>
+
+        <a id="login-link" href="/login.html" hidden>
+            Go to Sign In
+        </a>
+    </main>
+
+    <script>
+        "use strict";
+
+        (async function () {
+            const status = document.getElementById("status");
+            const loginLink = document.getElementById("login-link");
+
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get("token");
+
+            function showStatus(message, type) {
+                status.textContent = message;
+                status.className = type;
+            }
+
+            if (!token) {
+                showStatus(
+                    "The verification link is missing its token. Please open the complete link from your email.",
+                    "error"
+                );
+                return;
+            }
+
+            try {
+                const response = await fetch("/api/auth/verify-email", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ token })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.error || "Email verification failed."
+                    );
+                }
+
+                showStatus(
+                    "Your email has been verified successfully! You can now sign in.",
+                    "success"
+                );
+
+                loginLink.hidden = false;
+            } catch (error) {
+                showStatus(
+                    error.message ||
+                    "Unable to verify your email. Please try again.",
+                    "error"
+                );
+            }
+        })();
+    </script>
+</body>
+</html>

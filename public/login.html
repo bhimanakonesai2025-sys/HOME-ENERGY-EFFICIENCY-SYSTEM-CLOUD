@@ -46,6 +46,7 @@
           id="form-message"
           class="form-message"
           role="alert"
+          aria-live="polite"
           hidden
         ></div>
 
@@ -84,6 +85,13 @@
         </form>
 
         <p class="auth-switch">
+          Didn't receive your verification email?
+          <a href="#" id="resend-verification-link">
+            Resend verification email
+          </a>
+        </p>
+
+        <p class="auth-switch">
           Don't have an account?
           <a href="/register.html">Create one</a>
         </p>
@@ -95,5 +103,67 @@
 
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
+
+  <script>
+    "use strict";
+
+    (function () {
+      const resendLink = document.getElementById(
+        "resend-verification-link"
+      );
+
+      const emailInput = document.getElementById("email");
+      const messageBox = document.getElementById("form-message");
+
+      function showMessage(message, type = "error") {
+        messageBox.textContent = message;
+        messageBox.className = `form-message ${type}`;
+        messageBox.hidden = false;
+      }
+
+      resendLink.addEventListener("click", async function (event) {
+        event.preventDefault();
+
+        const email = emailInput.value.trim().toLowerCase();
+
+        if (!email) {
+          showMessage("Enter your email address first.");
+          emailInput.focus();
+          return;
+        }
+
+        if (!emailInput.checkValidity()) {
+          showMessage("Enter a valid email address.");
+          emailInput.focus();
+          return;
+        }
+
+        resendLink.style.pointerEvents = "none";
+        resendLink.setAttribute("aria-disabled", "true");
+
+        try {
+          const result = await EnergyAPI.post(
+            "/api/auth/resend-verification",
+            { email }
+          );
+
+          showMessage(
+            result.message ||
+              "If your account needs verification, a new email will be sent.",
+            "success"
+          );
+        } catch (error) {
+          showMessage(
+            error.message ||
+              "Unable to resend the verification email. Please try again later."
+          );
+        } finally {
+          resendLink.style.pointerEvents = "";
+          resendLink.removeAttribute("aria-disabled");
+        }
+      });
+    })();
+  </script>
+
 </body>
 </html>

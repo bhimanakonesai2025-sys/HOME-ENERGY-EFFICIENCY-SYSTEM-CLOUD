@@ -1,6 +1,13 @@
+"use strict";
+
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const { randomUUID } = require("crypto");
+
+const {
+    randomUUID,
+    randomBytes,
+    createHash
+} = require("crypto");
 
 const {
     getCollection,
@@ -12,41 +19,57 @@ const {
     requireAuth
 } = require("../middleware/auth");
 
+const {
+    seedDemoHome
+} = require("../services/demoDataService");
+
+const {
+    sendVerificationEmail
+} = require("../services/emailService");
+
 const router = express.Router();
 
-// Normalize email addresses before looking them up.
+const VERIFICATION_EXPIRY_MS = 30 * 60 * 1000;
+const DEMO_MODE = process.env.DEMO_MODE === "true";
+
 function normalizeEmail(email) {
     return String(email || "").trim().toLowerCase();
 }
 
-// Validate email syntax only; this does not verify mailbox ownership.
 function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Never expose password hashes or other private authentication fields.
+function hashToken(token) {
+    return createHash("sha256")
+        .update(token)
+        .digest("hex");
+}
+
+function getAppBaseUrl() {
+    return (
+        process.env.APP_BASE_URL ||
+        "http://localhost:5000"
+    ).replace(/\/+$/, "");
+}
+
 function publicUser(user) {
     return {
         userId: user.userId,
         name: user.name,
         email: user.email,
         homeId: user.homeId,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        emailVerified: user.emailVerified !== false
     };
 }
 
-/*
-|--------------------------------------------------------------------------
-| POST /api/auth/register
-|--------------------------------------------------------------------------
-| Body:
-| {
-|   "name": "Demo User",
-|   "email": "demo@example.com",
-|   "password": "ExamplePassword123"
-| }
-*/
 router.post("/register", async (req, res, next) => {
+    let homeId;
+    let userId;
+    let homeCreated = false;
+    let userCreated = false;
+
     try {
         const name = String(req.body.name || "").trim();
         const email = normalizeEmail(req.body.email);
@@ -74,6 +97,7 @@ router.post("/register", async (req, res, next) => {
         }
 
         const users = getCollection(COLLECTIONS.USERS);
+        const homes = getCollection(COLLECTIONS.HOMES);
 
         const existingUser = await users.findOne({ email });
 
@@ -84,10 +108,10 @@ router.post("/register", async (req, res, next) => {
             });
         }
 
-        const userId = randomUUID();
-        const homeId = randomUUID();
-        const now = new Date().toISOString();
+        userId = randomUUID();
+        homeId = randomUUID();
 
+        const now = new Date().toISOString();
         const passwordHash = await bcrypt.hash(password, 12);
 
         const user = {
@@ -96,62 +120,219 @@ router.post("/register", async (req, res, next) => {
             name,
             email,
             passwordHash,
+            emailVerified: DEMO_MODE,
             createdAt: now,
             updatedAt: now
         };
+
+        let verificationToken = null;
+
+        if (!DEMO_MODE) {
+            verificationToken = randomBytes(32).toString("hex");
+
+            user.emailVerificationTokenHash =
+                hashToken(verificationToken);
+
+            user.emailVerificationExpiresAt =
+                new Date(Date.now() + VERIFICATION_EXPIRY_MS);
+        }
 
         const home = {
             homeId,
             userId,
             name: `${name}'s Home`,
+            dataMode: "SIMULATED_DEMO",
             createdAt: now,
             updatedAt: now
         };
 
-        // Create the home first.
-        await getCollection(COLLECTIONS.HOMES).insertOne(home);
+        await homes.insertOne(home);
+        homeCreated = true;
 
-        try {
-            await users.insertOne(user);
-        } catch (error) {
-            // Roll back the home if user creation fails.
-            await getCollection(COLLECTIONS.HOMES)
-                .deleteOne({ homeId })
-                .catch(() => {});
+        await seedDemoHome(home, userId);
 
-            if (error.code === 11000) {
-                return res.status(409).json({
+        await users.insertOne(user);
+        userCreated = true;
+
+        if (!DEMO_MODE) {
+            const verificationUrl =
+                `${getAppBaseUrl()}/verify-email.html` +
+                `?token=${verificationToken}`;
+
+            try {
+                await sendVerificationEmail({
+                    email,
+                    name,
+                    verificationUrl
+                });
+            } catch (emailError) {
+                console.error(
+                    "[AUTH] Verification email could not be sent."
+                );
+
+                return res.status(503).json({
                     success: false,
-                    error: "An account with this email already exists."
+                    accountCreated: true,
+                    emailVerificationRequired: true,
+                    error:
+                        "Account created, but verification email " +
+                        "could not be sent. Request a new email later."
                 });
             }
-
-            throw error;
         }
-
-        const token = createToken(user);
 
         return res.status(201).json({
             success: true,
-            message: "Account created successfully.",
-            token,
-            user: publicUser(user)
+            accountCreated: true,
+            emailVerificationRequired: !DEMO_MODE,
+            message: DEMO_MODE
+                ? "Demo account created. You can sign in now."
+                : "Account created. Verify your email before signing in."
         });
+
+    } catch (error) {
+        if (!userCreated && homeCreated && homeId) {
+            await getCollection(COLLECTIONS.READINGS)
+                .deleteMany({ homeId })
+                .catch(() => {});
+
+            await getCollection(COLLECTIONS.APPLIANCES)
+                .deleteMany({ homeId })
+                .catch(() => {});
+
+            await getCollection(COLLECTIONS.HOMES)
+                .deleteOne({ homeId })
+                .catch(() => {});
+        }
+
+        next(error);
+    }
+});
+
+router.post("/verify-email", async (req, res, next) => {
+    try {
+        const token = String(req.body.token || "");
+
+        if (!/^[a-f0-9]{64}$/i.test(token)) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid or expired verification link."
+            });
+        }
+
+        const users = getCollection(COLLECTIONS.USERS);
+
+        const user = await users.findOne({
+            emailVerificationTokenHash: hashToken(token),
+            emailVerificationExpiresAt: { $gt: new Date() },
+            emailVerified: false
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid or expired verification link."
+            });
+        }
+
+        const now = new Date().toISOString();
+
+        const result = await users.updateOne(
+            {
+                userId: user.userId,
+                emailVerificationTokenHash: hashToken(token),
+                emailVerified: false
+            },
+            {
+                $set: {
+                    emailVerified: true,
+                    emailVerifiedAt: now,
+                    updatedAt: now
+                },
+                $unset: {
+                    emailVerificationTokenHash: "",
+                    emailVerificationExpiresAt: ""
+                }
+            }
+        );
+
+        if (result.modifiedCount !== 1) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid or expired verification link."
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: "Email verified successfully. You can now sign in."
+        });
+
     } catch (error) {
         next(error);
     }
 });
 
-/*
-|--------------------------------------------------------------------------
-| POST /api/auth/login
-|--------------------------------------------------------------------------
-| Body:
-| {
-|   "email": "demo@example.com",
-|   "password": "ExamplePassword123"
-| }
-*/
+router.post("/resend-verification", async (req, res) => {
+    try {
+        const email = normalizeEmail(req.body.email);
+
+        if (!isValidEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                error: "Enter a valid email address."
+            });
+        }
+
+        const users = getCollection(COLLECTIONS.USERS);
+        const user = await users.findOne({ email });
+
+        if (!user || user.emailVerified !== false) {
+            return res.json({
+                success: true,
+                message:
+                    "If an unverified account exists, a new " +
+                    "verification email will be sent."
+            });
+        }
+
+        const token = randomBytes(32).toString("hex");
+
+        await users.updateOne(
+            {
+                userId: user.userId,
+                emailVerified: false
+            },
+            {
+                $set: {
+                    emailVerificationTokenHash: hashToken(token),
+                    emailVerificationExpiresAt:
+                        new Date(Date.now() + VERIFICATION_EXPIRY_MS),
+                    updatedAt: new Date().toISOString()
+                }
+            }
+        );
+
+        await sendVerificationEmail({
+            email: user.email,
+            name: user.name,
+            verificationUrl:
+                `${getAppBaseUrl()}/verify-email.html?token=${token}`
+        });
+
+        return res.json({
+            success: true,
+            message: "A new verification email has been sent."
+        });
+
+    } catch (error) {
+        return res.status(503).json({
+            success: false,
+            error: "Unable to send verification email right now."
+        });
+    }
+});
+
 router.post("/login", async (req, res, next) => {
     try {
         const email = normalizeEmail(req.body.email);
@@ -164,8 +345,8 @@ router.post("/login", async (req, res, next) => {
             });
         }
 
-        const users = getCollection(COLLECTIONS.USERS);
-        const user = await users.findOne({ email });
+        const user = await getCollection(COLLECTIONS.USERS)
+            .findOne({ email });
 
         if (!user) {
             return res.status(401).json({
@@ -174,60 +355,22 @@ router.post("/login", async (req, res, next) => {
             });
         }
 
-        /*
-         * Current accounts use passwordHash.
-         * Older accounts may have a field named password.
-         */
         const storedHash = user.passwordHash || user.password;
 
-        if (typeof storedHash !== "string" || !storedHash) {
-            console.error(
-                "[AUTH] Password hash is missing for an account."
-            );
-
+        if (
+            typeof storedHash !== "string" ||
+            !/^\$2[aby]\$\d{2}\$/.test(storedHash)
+        ) {
             return res.status(401).json({
                 success: false,
-                error: "Unable to verify this account's password. " +
-                    "Please use account recovery."
+                error: "Unable to verify this account's password."
             });
         }
 
-        /*
-         * Do not assume every legacy hash uses bcrypt.
-         * Standard bcrypt hashes begin with $2a$, $2b$, or $2y$.
-         */
-        const isBcryptHash = /^\$2[aby]\$\d{2}\$/.test(storedHash);
-
-        if (!isBcryptHash) {
-            console.error(
-                "[AUTH] Legacy password format requires recovery."
-            );
-
-            return res.status(401).json({
-                success: false,
-                error: "This account uses an older password format. " +
-                    "A secure password recovery process is required."
-            });
-        }
-
-        let passwordMatches;
-
-        try {
-            passwordMatches = await bcrypt.compare(
-                password,
-                storedHash
-            );
-        } catch (error) {
-            console.error(
-                "[AUTH] Password verification failed:",
-                error.message
-            );
-
-            return res.status(500).json({
-                success: false,
-                error: "Unable to verify the password."
-            });
-        }
+        const passwordMatches = await bcrypt.compare(
+            password,
+            storedHash
+        );
 
         if (!passwordMatches) {
             return res.status(401).json({
@@ -236,26 +379,26 @@ router.post("/login", async (req, res, next) => {
             });
         }
 
-        const token = createToken(user);
+        if (user.emailVerified === false) {
+            return res.status(403).json({
+                success: false,
+                emailVerificationRequired: true,
+                error: "Please verify your email before signing in."
+            });
+        }
 
         return res.json({
             success: true,
             message: "Login successful.",
-            token,
+            token: createToken(user),
             user: publicUser(user)
         });
+
     } catch (error) {
         next(error);
     }
 });
 
-/*
-|--------------------------------------------------------------------------
-| GET /api/auth/me
-|--------------------------------------------------------------------------
-| Requires:
-| Authorization: Bearer YOUR_JWT_TOKEN
-*/
 router.get("/me", requireAuth, async (req, res, next) => {
     try {
         const user = await getCollection(COLLECTIONS.USERS).findOne(
@@ -264,7 +407,9 @@ router.get("/me", requireAuth, async (req, res, next) => {
                 projection: {
                     _id: 0,
                     password: 0,
-                    passwordHash: 0
+                    passwordHash: 0,
+                    emailVerificationTokenHash: 0,
+                    emailVerificationExpiresAt: 0
                 }
             }
         );
@@ -280,6 +425,7 @@ router.get("/me", requireAuth, async (req, res, next) => {
             success: true,
             user: publicUser(user)
         });
+
     } catch (error) {
         next(error);
     }
