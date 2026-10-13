@@ -28,6 +28,9 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+// Trust the reverse proxy used by Render.
+app.set("trust proxy", 1);
+
 app.disable("x-powered-by");
 
 /* =========================
