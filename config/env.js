@@ -32,13 +32,17 @@ const config = Object.freeze({
     port: readNumber("PORT", 5000),
 
     mongodbUri: readString("MONGODB_URI"),
-    mongodbDbName: readString("MONGODB_DB_NAME", "EnergyFlowDB"),
+
+    // Support both Render's DB_NAME and MONGODB_DB_NAME.
+    mongodbDbName: readString(
+        "MONGODB_DB_NAME",
+        readString("DB_NAME", "EnergyFlowDB")
+    ),
 
     jwtSecret: readString("JWT_SECRET"),
     jwtExpiresIn: readString("JWT_EXPIRES_IN", "1d"),
 
     costPerKwh: readNumber("COST_PER_KWH", 8),
-
     ingestionApiKey: readString("INGEST_API_KEY"),
 
     workerPollIntervalMs: readNumber(
@@ -46,20 +50,10 @@ const config = Object.freeze({
         3000
     ),
 
-    workerBatchSize: readNumber(
-        "WORKER_BATCH_SIZE",
-        25
-    ),
+    workerBatchSize: readNumber("WORKER_BATCH_SIZE", 25),
+    workerMaxAttempts: readNumber("WORKER_MAX_ATTEMPTS", 3),
 
-    workerMaxAttempts: readNumber(
-        "WORKER_MAX_ATTEMPTS",
-        3
-    ),
-
-    anomalyMinReadings: readNumber(
-        "ANOMALY_MIN_READINGS",
-        5
-    ),
+    anomalyMinReadings: readNumber("ANOMALY_MIN_READINGS", 5),
 
     anomalyThresholdMultiplier: readNumber(
         "ANOMALY_THRESHOLD_MULTIPLIER",
