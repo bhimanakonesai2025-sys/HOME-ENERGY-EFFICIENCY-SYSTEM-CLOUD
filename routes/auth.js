@@ -64,6 +64,10 @@ function publicUser(user) {
     };
 }
 
+/* =========================
+   REGISTER
+========================= */
+
 router.post("/register", async (req, res, next) => {
     let homeId;
     let userId;
@@ -209,6 +213,10 @@ router.post("/register", async (req, res, next) => {
     }
 });
 
+/* =========================
+   VERIFY EMAIL
+========================= */
+
 router.post("/verify-email", async (req, res, next) => {
     try {
         const token = String(req.body.token || "");
@@ -273,6 +281,10 @@ router.post("/verify-email", async (req, res, next) => {
     }
 });
 
+/* =========================
+   RESEND VERIFICATION
+========================= */
+
 router.post("/resend-verification", async (req, res) => {
     try {
         const email = normalizeEmail(req.body.email);
@@ -333,6 +345,10 @@ router.post("/resend-verification", async (req, res) => {
     }
 });
 
+/* =========================
+   LOGIN
+========================= */
+
 router.post("/login", async (req, res, next) => {
     try {
         const email = normalizeEmail(req.body.email);
@@ -379,7 +395,9 @@ router.post("/login", async (req, res, next) => {
             });
         }
 
-        if (user.emailVerified === false) {
+        // Demo-only bypass. Normal verification remains enforced
+        // whenever DEMO_MODE is not set to "true".
+        if (!DEMO_MODE && user.emailVerified === false) {
             return res.status(403).json({
                 success: false,
                 emailVerificationRequired: true,
@@ -398,6 +416,10 @@ router.post("/login", async (req, res, next) => {
         next(error);
     }
 });
+
+/* =========================
+   CURRENT USER
+========================= */
 
 router.get("/me", requireAuth, async (req, res, next) => {
     try {
